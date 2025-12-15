@@ -10,7 +10,9 @@ import { Link } from "react-router-dom";
 // import Catagory from "../components/Catagory";
 
 const AddItem = () => {
-  const api = "https://gebeyachn-server-apiendpoint.onrender.com/ip/cat/allcat";
+    const API_BASE_URL = process.env.REACT_APP_URL ;
+
+  const api = `${API_BASE_URL}/ip/cat/allcat`;
   const { data } = Usefetch(api);
   const Category = data.cats;
 
@@ -61,7 +63,7 @@ const AddItem = () => {
     }
     try {
       const response = await fetch(
-        "https://gebeyachn-server-apiendpoint.onrender.com/ip/item/newitems",
+        `${API_BASE_URL}/ip/item/newitems`,
         {
           method: "POST",
           headers: {

@@ -2,6 +2,7 @@ import { UseAuthContext } from "./useAuthContext";
 import {useState, useEffect} from 'react'
 
  export const useValidator = ()=>{
+  const API_BASE_URL = process.env.REACT_APP_URL ;
 
 const {user, dispatch} = UseAuthContext()
 const [valid ,setValid] = useState(false)
@@ -14,7 +15,7 @@ useEffect(()=>{
       return
     }
       const tok = user.token  
-    fetch("https://gebeyachn-server-apiendpoint.onrender.com/api/user/verify", {
+    fetch(`${API_BASE_URL}/api/user/verify`, {
       method: "POST",
       headers: { authorization: `beared ${tok}` },
     })

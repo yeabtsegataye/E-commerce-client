@@ -8,6 +8,8 @@ import { UseAuthContext } from "../hooks/useAuthContext";
 import { useNavigate } from "react-router-dom";
 
 function Dashborad() {
+    const API_BASE_URL = process.env.REACT_APP_URL ;
+
   const Toast = useToast();
   const { user } = UseAuthContext();
   const navigate = useNavigate();
@@ -75,7 +77,7 @@ function Dashborad() {
     }
     try {
       const response = await fetch(
-        "https://gebeyachn-server-apiendpoint.onrender.com/ip/cat/newcat",
+        `${API_BASE_URL}/ip/cat/newcat`,
         {
           method: "POST",
           headers: {

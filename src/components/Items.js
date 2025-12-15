@@ -4,46 +4,69 @@ import Usefetch from "../hooks/useGet";
 import { Link } from "react-router-dom";
 
 function Items() {
-  const api =
-    "https://gebeyachn-server-apiendpoint.onrender.com/ip/item/allitems";
+  const API_BASE_URL = process.env.REACT_APP_URL;
+  const api = `${API_BASE_URL}/ip/item/allitems`;
   const { data } = Usefetch(api);
-  const all_items = data.all_Items;
-  console.log("items", all_items);
+
+  const all_items = data?.all_Items;
+
   return (
     <div className="items">
-      {/* card starts */}
-      {all_items &&
-        all_items.map((items) => (
-          <Link to={`/itemdetail/${items._id}`} className="links">
-            <div class="card">
-              <img
-                src={items.Item_Images}
-                class="card-img-top"
-                alt={items.Item_Description}
-              />
-              <div class="card-body">
-                <h6 class="card-title">{items.Item_Name}</h6>
-                <i class="fa-solid fa-star" style={{ color: "#fad000" }}></i>
-                <i class="fa-solid fa-star" style={{ color: "#fad000" }}></i>
-                <i class="fa-solid fa-star" style={{ color: "#fad000" }}></i>
-                <i class="fa-solid fa-star" style={{ color: "#fad000" }}></i>
-                <i class="fa-regular fa-star"></i>
-                <i class="fa-regular fa-star"></i>
-                <hr />
-                <a href="/" class="snav1">
-                  <button>Add +</button>
-                  <p>{items.Item_Price.toLocaleString()}$</p>
-                </a>
+      {all_items ? (
+        all_items.map((item) => (
+          <Link
+            to={`/itemdetail/${item._id}`}
+            className="links"
+            key={item._id}
+          >
+            <div className="card product-card">
+              {/* Category badge (FIXED) */}
+              <span className="category-badge">
+                {item.Item_Category?.catagory_Name || "Other"}
+              </span>
+
+              {/* Image */}
+              <div className="image-wrapper">
+                <img
+                  src={item.Item_Images}
+                  alt={item.Item_Description}
+                  className="card-img-top"
+                />
+              </div>
+
+              <div className="card-body">
+                {/* Title */}
+                <h6 className="card-title">{item.Item_Name}</h6>
+
+                {/* Rating */}
+                <div className="rating">
+                  <i className="fa-solid fa-star"></i>
+                  <i className="fa-solid fa-star"></i>
+                  <i className="fa-solid fa-star"></i>
+                  <i className="fa-solid fa-star"></i>
+                  <i className="fa-regular fa-star"></i>
+                  <span className="review-count">(5.0k Reviews)</span>
+                </div>
+
+                {/* Price */}
+                <div className="price">
+                  ${item.Item_Price?.toLocaleString()}
+                </div>
+
+                {/* Buttons */}
+                <div className="actions">
+                  <button className="btn-outline">Add to Cart</button>
+                  <button className="btn-filled">Buy Now</button>
+                </div>
               </div>
             </div>
           </Link>
-        ))}
-      {!all_items && (
+        ))
+      ) : (
         <div className="spinner-border text-warning" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       )}
-      {/* card ends  */}
     </div>
   );
 }

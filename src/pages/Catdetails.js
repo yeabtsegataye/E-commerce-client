@@ -9,10 +9,12 @@ import { Link, useParams } from "react-router-dom";
 import Usefetch from "../hooks/useGet";
 
 function Cat_details() {
+    const API_BASE_URL = process.env.REACT_APP_URL ;
+
   const _id = useParams();
   const id = _id.id;
   console.log(id);
-  const api = `https://gebeyachn-server-apiendpoint.onrender.com/ip/item/catitems/${id}`;
+  const api = `${API_BASE_URL}/ip/item/catitems/${id}`;
   const { data } = Usefetch(api);
   const all_items = data.cat_one;
   return (

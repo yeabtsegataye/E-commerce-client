@@ -352,3 +352,12 @@ body {
     grid-template-columns: auto;
   }
 }
+.delete-item {
+  color: red;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.delete-item:hover {
+  text-decoration: underline;
+}

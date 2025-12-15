@@ -17,6 +17,8 @@ import Notfound from "./pages/404";
 
 function App() {
   const { user } = UseAuthContext();
+  console.log(user,'usserere')
+  console.log(process.env.REACT_APP_URL, 'myyyy')
 
   return (
     <BrowserRouter>

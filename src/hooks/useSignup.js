@@ -3,6 +3,8 @@ import { UseAuthContext } from "./useAuthContext";
 import { useToast } from "@chakra-ui/react";
 
 export const useSignup = () => {
+    const API_BASE_URL = process.env.REACT_APP_URL ;
+
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { dispatch } = UseAuthContext();
@@ -13,7 +15,7 @@ export const useSignup = () => {
     setError(null);
 
     const response = await fetch(
-      "https://gebeyachn-server-apiendpoint.onrender.com/ip/user/signup",
+      `${API_BASE_URL}/ip/user/signup`,
       {
         method: "POST",
         headers: {

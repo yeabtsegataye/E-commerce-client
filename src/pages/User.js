@@ -9,10 +9,12 @@ import { Avatar, Wrap, WrapItem } from "@chakra-ui/react";
 import Usefetch from "../hooks/useGet";
 import { UseAuthContext } from "../hooks/useAuthContext";
 function User() {
+    const API_BASE_URL = process.env.REACT_APP_URL ;
+
   const { user } = UseAuthContext();
   const id = user.id;
 
-  const api = `https://gebeyachn-server-apiendpoint.onrender.com/ip/item/useritems/${id}`;
+  const api = `${API_BASE_URL}/ip/item/useritems/${id}`;
   const { data } = Usefetch(api);
   const all_items = data.cat_one;
 

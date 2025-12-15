@@ -7,6 +7,8 @@ import { Avatar, Wrap, WrapItem } from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/react";
 import axios from "axios";
 const Navbar = () => {
+    const API_BASE_URL = process.env.REACT_APP_URL ;
+
   const { user } = UseAuthContext();
   const [search, setSearch] = useState();
   const [Loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ const Navbar = () => {
       setLoading(true);
 
       const { data } = await axios.get(
-        `https://gebeyachn-server-apiendpoint.onrender.com/ip/item?search=${search}`
+        `${API_BASE_URL}/ip/item?search=${search}`
       );
       const tati = data.Item;
       console.log(tati);
@@ -306,11 +308,11 @@ const Navbar = () => {
                     <i className="fa-solid fa-shop"></i>Shop
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link to="/catagory">
                     <i className="fa-solid fa-store"></i>Store
                   </Link>
-                </li>
+                </li> */}
                 <li>
                   <Link to="/catagory">
                     <i className="fa-solid fa-book"></i>Catagory
@@ -362,9 +364,9 @@ const Navbar = () => {
           <li>
             <Link to="/catagory">Shop</Link>
           </li>
-          <li>
+          {/* <li>
             <Link to="/catagory">Store</Link>
-          </li>
+          </li> */}
 
           {user && (
             <li>
