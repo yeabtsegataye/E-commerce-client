@@ -14,6 +14,7 @@ import Doc from "./pages/Doc";
 import { UseAuthContext } from "./hooks/useAuthContext";
 import Itemsdetails from "./pages/Itemsdetails";
 import Notfound from "./pages/404";
+import Cart from "./pages/Cart";
 
 function App() {
   const { user } = UseAuthContext();
@@ -32,6 +33,8 @@ function App() {
           element={user && user.isAdmin ? <Dashboard /> : <Home />}
         />
         <Route path="/about" element={<About />} />
+        <Route path="/cart" element={<Cart />} />
+
         <Route path="/catagory" element={<CatagoryPg />} />
         <Route path="/doc" element={<Doc />} />
         <Route path="/user" element={user ? <User /> : <Home />} />

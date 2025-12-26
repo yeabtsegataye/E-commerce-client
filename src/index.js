@@ -5,13 +5,16 @@ import { AuthContextProvider } from "./contexts/userContext";
 
 import "./index.css";
 import App from "./App";
+import { CartProvider } from "./contexts/CartContext";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <AuthContextProvider>
       <ChakraProvider>
-        <App />
+        <CartProvider>
+          <App />
+        </CartProvider>
       </ChakraProvider>
     </AuthContextProvider>
   </React.StrictMode>

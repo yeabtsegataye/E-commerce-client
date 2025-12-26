@@ -2,14 +2,32 @@ import React from "react";
 import "./Items.css";
 import Usefetch from "../hooks/useGet";
 import { Link } from "react-router-dom";
+import { useCart } from "../contexts/CartContext";
+import { useToast } from "@chakra-ui/react";
 
 function Items() {
+    const Toast = useToast();
+
   const API_BASE_URL = process.env.REACT_APP_URL;
   const api = `${API_BASE_URL}/ip/item/allitems`;
   const { data } = Usefetch(api);
+  const { addToCart } = useCart();
 
   const all_items = data?.all_Items;
+  const handleAddToCart = (e, item) => {
+    e.preventDefault(); // Prevent navigation when clicking "Add to Cart"
+    addToCart(item);
 
+    // Optional: Show a toast notification
+    // alert(`${item.Item_Name} added to cart!`);
+     Toast({
+        title: `${item.Item_Name} added to cart!`,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+  };
   return (
     <>
       <h1 className="items"> products</h1>
@@ -58,7 +76,12 @@ function Items() {
 
                   {/* Buttons */}
                   <div className="actions">
-                    <button className="btn-outline">Add to Cart</button>
+                    <button
+                      className="btn-outline"
+                      onClick={(e) => handleAddToCart(e, item)}
+                    >
+                      Add to Cart
+                    </button>{" "}
                     <button className="btn-filled">Buy Now</button>
                   </div>
                 </div>

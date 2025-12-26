@@ -1,39 +1,55 @@
 import React, { useState } from "react";
 import "./navbar.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { UseAuthContext } from "../hooks/useAuthContext";
 import { UseLogout } from "../hooks/useLogout";
 import { Avatar, Wrap, WrapItem } from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/react";
 import axios from "axios";
+import Usefetch from "../hooks/useGet";
+import { useCart } from "../contexts/CartContext";
+
 const Navbar = () => {
-    const API_BASE_URL = process.env.REACT_APP_URL ;
+  const API_BASE_URL = process.env.REACT_APP_URL;
+  const api = `${API_BASE_URL}/ip/cat/allcat`;
+  const { data } = Usefetch(api);
+  const navigate = useNavigate();
+
+  const categories = data?.cats || [];
+  // console.log('Categories:', categories);
 
   const { user } = UseAuthContext();
-  const [search, setSearch] = useState();
+  const { cartItems, getCartCount } = useCart();
+  const [search, setSearch] = useState("");
   const [Loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const Toast = useToast();
-  console.log("search", searchResult);
+
+  // console.log("search", searchResult);
+
   const handle_Search = async (query) => {
     setSearch(query);
-    if (!query) {
+
+    if (!query || query.trim() === "") {
+      setSearchResult([]);
+      setShowSearchResults(false);
       return;
     }
 
     try {
       setLoading(true);
-
+      setShowSearchResults(true);
       const { data } = await axios.get(
-        `${API_BASE_URL}/ip/item?search=${search}`
+        `${API_BASE_URL}/ip/item?search=${query}`
       );
-      const tati = data.Item;
-      console.log(tati);
+      const items = data.Item || [];
+      // console.log(items);
       setLoading(false);
-      setSearchResult(tati);
+      setSearchResult(items);
     } catch (error) {
       Toast({
-        title: "Error Occured!",
+        title: "Error Occurred!",
         description: "Failed to Load the Search Results",
         status: "error",
         duration: 5000,
@@ -41,12 +57,44 @@ const Navbar = () => {
         position: "bottom-left",
       });
       setLoading(false);
+      setSearchResult([]);
     }
   };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (search.trim()) {
+      navigate(`/search?q=${encodeURIComponent(search)}`);
+      setShowSearchResults(false);
+      setSearch("");
+    }
+  };
+
+  const handleResultClick = (itemId) => {
+    console.log(itemId, "iiddd");
+    navigate(`/itemdetail/${itemId}`);
+    setShowSearchResults(false);
+    setSearch("");
+  };
+
+  const handleSearchBlur = () => {
+    // Hide results after a short delay to allow clicking on results
+    setTimeout(() => {
+      setShowSearchResults(false);
+    }, 200);
+  };
+
+  const handleSearchFocus = () => {
+    if (search.trim() && searchResult.length > 0) {
+      setShowSearchResults(true);
+    }
+  };
+
   const { logout } = UseLogout();
-  const handl_logout = () => {
+  const handle_logout = () => {
     logout();
   };
+
   return (
     <React.Fragment>
       <nav className="navbar">
@@ -56,317 +104,154 @@ const Navbar = () => {
         </a>
 
         <div className="search">
-          <form className="d-flex flex-grow-1">
-            <input
-              data-bs-toggle="modal"
-              data-bs-target="#exampleModal"
-              className="form-control flex-grow-1"
-              type="search"
-              placeholder="Search items"
-              aria-label="Search"
-              style={{ width: "400px" }}
-            />
-          </form>
-          <div
-            class="modal fade"
-            id="exampleModal"
-            tabindex="-1"
-            aria-labelledby="exampleModalLabel"
-            aria-hidden="true"
-          >
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h1 class="modal-title fs-5" id="exampleModalLabel">
-                    Search Any Item
-                  </h1>
-                  <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div class="modal-body">
-                  <input
-                    className="form-control d-flex flex-grow-1"
-                    type="search"
-                    placeholder="Search"
-                    aria-label="Search"
-                    style={{ width: "450px" }}
-                    onChange={(e) => {
-                      handle_Search(e.target.value);
-                    }}
-                  />
-                  {Loading && (
-                    <button className="submits" disabled type="submit">
-                      <div class="spinner-border text-warning" role="status">
-                        <span class="visually-hidden">Loading...</span>
+          <form className="d-flex flex-grow-1" onSubmit={handleSearchSubmit}>
+            <div className="search-container" style={{ position: "relative" }}>
+              <input
+                className="form-control flex-grow-1"
+                type="search"
+                placeholder="Search items"
+                aria-label="Search"
+                style={{ width: "400px" }}
+                value={search}
+                onChange={(e) => handle_Search(e.target.value)}
+                onBlur={handleSearchBlur}
+                onFocus={handleSearchFocus}
+              />
+
+              {/* Search button inside input */}
+              <button
+                type="submit"
+                className="search-button"
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "transparent",
+                  border: "none",
+                  color: "#ff4444",
+                  cursor: "pointer",
+                }}
+              >
+                <i className="fa-solid fa-magnifying-glass"></i>
+              </button>
+
+              {/* Search Results Dropdown */}
+              {showSearchResults && (
+                <div className="search-results-dropdown">
+                  {Loading ? (
+                    <div className="search-loading">
+                      <div
+                        className="spinner-border text-warning"
+                        role="status"
+                      >
+                        <span className="visually-hidden">Loading...</span>
                       </div>
-                    </button>
-                  )}
-                  {searchResult && (
-                    <div
-                      className="search_results"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"
-                    >
-                      {searchResult.map((it) => (
-                        <Link to={`/itemdetail/${it._id}`}>
-                          <div
-                            className="search_result"
-                            key={it._id}
-                            aria-label="Close"
-                            data-bs-dismiss="modal"
-                          >
+                    </div>
+                  ) : searchResult.length > 0 ? (
+                    <div className="search-results-list">
+                      {searchResult.slice(0, 5).map((it) => (
+                        <Link
+                          to={`/itemdetail/${it._id}`}
+                          key={it._id}
+                          className="search-result-item-link"
+                          onClick={() => {
+                            handleResultClick(it._id)
+                            setShowSearchResults(false);
+                            setSearch("");
+                          }}
+                        >
+                          <div className="search-result-item">
                             <img
-                              className="search_img"
+                              className="search-result-img"
                               src={it.Item_Images}
                               alt={it.Item_Brand}
-                              style={{ width: "100%" }}
                             />
-                            <div className="search_title">
-                              <h5>{it.Item_Brand}</h5>
-                              <span>{it.Item_Description}</span>
+                            <div className="search-result-details">
+                              <h6>{it.Item_Brand}</h6>
+                              <p>
+                                {it.Item_Description?.substring(0, 50) ||
+                                  "No description available"}
+                                ...
+                              </p>
+                              <span className="search-result-price">
+                                ${it.Item_Price}
+                              </span>
                             </div>
                           </div>
                         </Link>
                       ))}
+                      {searchResult.length > 5 && (
+                        <div
+                          className="search-view-all"
+                          onClick={() => {
+                            navigate(`/search?q=${encodeURIComponent(search)}`);
+                            setShowSearchResults(false);
+                            setSearch("");
+                          }}
+                        >
+                          View all {searchResult.length} results
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="btns">
-          {!user && (
-            <Link to="/login">
-              <button className="btn btn-light ms-3">Login</button>
-            </Link>
-          )}
-          {user && (
-            <Link to="/">
-              <button className="btn btn-light ms-3" onClick={handl_logout}>
-                Log out
-              </button>
-            </Link>
-          )}
-        </div>
-        <div className="bar">
-          <i
-            className="fa-solid fa-bars"
-            data-bs-toggle="offcanvas"
-            href="#offcanvasExample"
-            role="button"
-            aria-controls="offcanvasExample"
-          ></i>
-
-          <div
-            className="offcanvas offcanvas-start"
-            tabIndex="-1"
-            id="offcanvasExample"
-            aria-labelledby="offcanvasExampleLabel"
-          >
-            <div className="offcanvas-header">
-              <h3 className="offcanvas-title" id="offcanvasExampleLabel">
-                <a className="navbar-brand1 me-auto" href="/">
-                  <i className="fa-solid fa-cart-shopping"></i>
-                  Gebayachn
-                </a>
-              </h3>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="offcanvas"
-                aria-label="Close"
-              ></button>
-            </div>
-
-            <div className="offcanvas-body">
-              {user && (
-                <div id="onbar_profile_img">
-                  <Wrap>
-                    <WrapItem>
-                      <Avatar size="xl" name="Segun Adebayo" src={user.pic} />
-                    </WrapItem>
-                  </Wrap>
+                  ) : search.trim() && !Loading ? (
+                    <div className="search-no-results">
+                      No results found for "{search}"
+                    </div>
+                  ) : null}
                 </div>
               )}
-              <div className="search1">
-                {/* <i className="fa-solid fa-magnifying-glass"></i> */}
-                <input
-                  className="form-control d-flex flex-grow-1"
-                  type="search"
-                  data-bs-toggle="modal"
-                  data-bs-target="#exampleModal1"
-                  placeholder="Search"
-                  aria-label="Search"
-                  style={{ width: "400px" }}
-                />
-
-                <div
-                  class="modal fade"
-                  id="exampleModal1"
-                  tabindex="-1"
-                  aria-labelledby="exampleModalLabel"
-                  aria-hidden="true"
-                >
-                  <div class="modal-dialog">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">
-                          Search Any Item
-                        </h1>
-                        <button
-                          type="button"
-                          class="btn-close"
-                          data-bs-dismiss="modal"
-                          aria-label="Close"
-                        ></button>
-                      </div>
-                      <div class="modal-body">
-                        <input
-                          className="form-control d-flex flex-grow-1"
-                          type="search"
-                          placeholder="Search"
-                          aria-label="Search"
-                          style={{ width: "450px" }}
-                          onChange={(e) => {
-                            handle_Search(e.target.value);
-                          }}
-                        />
-                        {searchResult && (
-                          <div
-                            className="search_results"
-                            // data-bs-dismiss="modal"
-                            // aria-label="Close"
-                          >
-                            {searchResult.map((it) => (
-                              <Link to={`/itemdetail/${it._id}`}>
-                                <div
-                                  className="search_result"
-                                  key={it._id}
-                                  aria-label="Close"
-                                  data-bs-dismiss="modal"
-                                >
-                                  <img
-                                    className="search_img"
-                                    src={it.Item_Images}
-                                    alt={it.Item_Brand}
-                                    style={{ width: "100%" }}
-                                  />
-                                  <div className="search_title">
-                                    <h5>{it.Item_Brand}</h5>
-                                    <span>{it.Item_Description}</span>
-                                  </div>
-                                </div>
-                              </Link>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="btns1">
-                {!user && (
-                  <button className="btn btn-light ms-3">
-                    <Link to="/login">
-                      <i class="fa-solid fa-lock"></i>Login
-                    </Link>
-                  </button>
-                )}
-                {user && (
-                  <button className="btn btn-light ms-3">
-                    <Link to="/user"> Profile</Link>
-                  </button>
-                )}
-              </div>
-              <div className="btns1">
-                <button className="ms-3">
-                  <span>
-                    <i className="fa-solid fa-location-dot"></i>
-                  </span>
-                  Select Location
-                </button>
-              </div>
-              {/* <!-- Button trigger modal --> */}
-
-              {/* </div> */}
-              <hr />
-              <ul className="pop_list">
-                <li>
-                  <Link to="/">
-                    <i className="fa-solid fa-house"></i>Home{" "}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/catagory">
-                    <i className="fa-solid fa-shop"></i>Shop
-                  </Link>
-                </li>
-                {/* <li>
-                  <Link to="/catagory">
-                    <i className="fa-solid fa-store"></i>Store
-                  </Link>
-                </li> */}
-                <li>
-                  <Link to="/catagory">
-                    <i className="fa-solid fa-book"></i>Catagory
-                  </Link>
-                </li>
-                {user && (
-                  <li>
-                    <Link to="/user">
-                      <i className="fa-solid fa-user"></i>Account
-                    </Link>
-                  </li>
-                )}
-                {!user && (
-                  <li>
-                    <Link to="/login">
-                      <i className="fa-solid fa-user"></i>Account
-                    </Link>
-                  </li>
-                )}
-                <li>
-                  <Link to="/dashboard">
-                    <i className="fa-solid fa-gear"></i>Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/doc">
-                    <i className="fa-solid fa-truck-fast"></i>Doc
-                  </Link>
-                </li>
-              </ul>
             </div>
+          </form>
+        </div>
+
+        <div className="nav-right-section">
+          {/* Cart Icon */}
+
+          {/* Login/Logout Buttons */}
+          <div className="btns">
+            {!user && (
+              <Link to="/login">
+                <button className="btn btn-light ms-3">Login</button>
+              </Link>
+            )}
+            {user && (
+              <Link to="/">
+                <button className="btn btn-light ms-3" onClick={handle_logout}>
+                  Log out
+                </button>
+              </Link>
+            )}
           </div>
         </div>
       </nav>
+
       <div className="snav">
         <ul>
           <li>
             <Link to="/"> Home</Link>
           </li>
           <li>
+            <Link to="/cart">
+              Cart
+              {getCartCount() > 0 && (
+                <span className="cart-badge-snav">({getCartCount()})</span>
+              )}
+            </Link>
+          </li>
+          <li>
             <Link to="/catagory"> Category</Link>
           </li>
-          {/* <li>
-            <Link to="/about"> About</Link>
-          </li> */}
-          <li>
-            <Link to="/service"> Service</Link>
-          </li>
-          <li>
-            <Link to="/catagory">Shop</Link>
-          </li>
-          {/* <li>
-            <Link to="/catagory">Store</Link>
-          </li> */}
+
+          {/* Show first 3 categories in main navbar */}
+          {categories.length > 0 &&
+            categories.slice(0, 3).map((cat) => (
+              <li key={cat._id}>
+                <Link to={`/categorydetail/${cat._id}`}>
+                  {cat.catagory_Name}
+                </Link>
+              </li>
+            ))}
 
           {user && (
             <li>
@@ -378,9 +263,7 @@ const Navbar = () => {
               <Link to="/login">Account</Link>
             </li>
           )}
-          <li>
-            <Link to="/doc">Doc</Link>
-          </li>
+
           {user && user.isAdmin && (
             <li>
               <Link to="/dashboard">Dashboard</Link>
@@ -405,6 +288,17 @@ const Navbar = () => {
               </button>
             )}
           </div>
+
+          {/* Desktop Cart Icon */}
+          <div className="cart-icon-desktop">
+            <Link to="/cart">
+              <i className="fa-solid fa-shopping-cart"></i>
+              {getCartCount() > 0 && (
+                <span className="cart-badge-desktop">{getCartCount()}</span>
+              )}
+            </Link>
+          </div>
+
           <div id="profile_pic_nave">
             {user && (
               <Link to="/user">

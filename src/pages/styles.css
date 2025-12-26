@@ -11,9 +11,9 @@ body {
   flex: 1;
   padding-bottom: 30px;
 }
-.carousel-light {
+/* .carousel-light {
   margin: 1rem 0 1.8rem 0;
-}
+} */
 .main1 {
   display: block;
 
@@ -321,9 +321,9 @@ body {
   margin-bottom: 3rem;
 }
 /* for user post */
-.content {
+/* .content {
   margin-top: 1rem;
-}
+} */
 @media (max-width: 500px) {
   .user_grid {
     grid-template-columns: auto;
