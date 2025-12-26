@@ -18,7 +18,7 @@ function About() {
               <p>
                 Gebeyachen store is developed for the purpose of delivrering
                 fast, secure, reliable and easy way to communicate buyers and
-                sellers to buy and sell products. It is developed in 2015 by two
+                sellers to buy and sell products. It is developed in 2018 by two
                 university students.
               </p>
             </div>

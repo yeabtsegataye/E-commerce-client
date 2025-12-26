@@ -1,58 +1,71 @@
-.catagorys h2 {
-  margin-bottom: 3rem;
-  color: #ff5a00;
+/* CATEGORY WRAPPER */
+.category-section {
+  margin: 2rem 1rem;
 }
-.cats a:hover {
-  transition: 0.4s;
 
-  color: #ff5a00;
-  cursor: pointer;
-}
-/* .card_cat {
-  position: relative;
-  box-sizing: border-box;
-  border-radius: 8px;
+/* HEADER */
+.category-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-} */
-.cats .card:hover {
-  box-shadow: rgba(0, 0, 0, 0.09) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px,
-    rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px,
-    rgba(0, 0, 0, 0.09) 0px 32px 16px;
 }
-.cats .card {
-  border: solid 1px #ff59004b;
-  border-radius: 7px;
-  box-shadow: rgba(136, 165, 191, 0.48) 6px 2px 16px 0px,
-    rgba(255, 255, 255, 0.8) -6px -2px 16px 0px;
-}
-.card_cat:hover {
-  color: white;
-  /* background-color: #ff5a00; */
-}
-.card_cat .discription {
-  display: flex;
-  flex-direction: column;
-}
-.discription h {
-  padding-bottom: 0.5rem;
-}
-.discription p {
-  font-size: 12px;
-}
-.catagorys .cats .card {
-  margin-bottom: 1rem;
-}
-.card .cat_imgs {
-  aspect-ratio: 3/2;
-  object-fit: cover;
-  width: 100%;
 
-  border-radius: 7px;
-  /* margin-right: 10px; */
+.category-header h2 {
+  font-size: 28px;
+  font-weight: 700;
 }
-.catagorys .spinner-border {
-  margin: 2rem 50%;
-  font-size: 30px;
+
+.view-all {
+  background-color: #6fbf4a;
+  color: white;
+  border: none;
+  padding: 0.4rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* HORIZONTAL LIST */
+.category-list {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-behavior: smooth;
+}
+
+.category-list::-webkit-scrollbar {
+  height: 6px;
+}
+
+.category-list::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 10px;
+}
+
+/* CATEGORY ITEM */
+.category-item {
+  min-width: 120px;
+  text-align: center;
+  text-decoration: none;
+  color: black;
+}
+
+.category-item img {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.category-item img:hover {
+  transform: scale(1.05);
+}
+
+.category-item p {
+  margin-top: 0.5rem;
+  font-size: 14px;
+  font-weight: 600;
 }

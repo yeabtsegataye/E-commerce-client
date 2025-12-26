@@ -355,9 +355,9 @@ const Navbar = () => {
           <li>
             <Link to="/catagory"> Category</Link>
           </li>
-          <li>
+          {/* <li>
             <Link to="/about"> About</Link>
-          </li>
+          </li> */}
           <li>
             <Link to="/service"> Service</Link>
           </li>

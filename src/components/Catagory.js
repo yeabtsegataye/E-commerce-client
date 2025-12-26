@@ -4,42 +4,37 @@ import Usefetch from "../hooks/useGet";
 import { Link } from "react-router-dom";
 
 const Catagory = () => {
-  // Use environment variable with fallback to localhost for development
-  const API_BASE_URL = process.env.REACT_APP_URL ;
+  const API_BASE_URL = process.env.REACT_APP_URL;
   const api = `${API_BASE_URL}/ip/cat/allcat`;
   const { data } = Usefetch(api);
-  const catagory = data?.cats; // Added optional chaining for safety
+
+  const catagory = data?.cats;
 
   return (
-    <div>
-      <div className="container catagorys">
-        <h2>Categories</h2>
-        {catagory && (
-          <div className="cats">
-            {catagory.map((cats) => (
-              <Link to={`/categorydetail/${cats._id}`}>
-                <div class="card">
-                  <img
-                    src={cats.cat_pic}
-                    class="card-img-top"
-                    alt={cats.Catagory_Name}
-                    className="cat_imgs"
-                  />
-                  <div class="card-body">
-                    <h5>{cats.catagory_Name}</h5>
-                    <p class="card-text">{cats.cat_description}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-        {!catagory && (
-          <div className="spinner-border text-warning" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        )}
+    <div className="category-section">
+      <div className="category-header">
+        <h2>Category</h2>
+        <button className="view-all"><a href="/catagory">View All</a></button>
       </div>
+
+      {catagory ? (
+        <div className="category-list">
+          {catagory.map((cat) => (
+            <Link
+              to={`/categorydetail/${cat._id}`}
+              className="category-item"
+              key={cat._id}
+            >
+              <img src={cat.cat_pic} alt={cat.catagory_Name} />
+              <p>{cat.catagory_Name}</p>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="spinner-border text-warning" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      )}
     </div>
   );
 };

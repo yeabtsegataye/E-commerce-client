@@ -15,12 +15,11 @@ body {
   margin: 1rem 0 1.8rem 0;
 }
 .main1 {
-  display: grid;
-  grid-template-columns: 25% 75%;
+  display: block;
+
 }
 .coll1 {
   overflow-y: auto;
-  height: 100vh;
 }
 /* user profile css */
 

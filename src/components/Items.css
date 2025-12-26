@@ -1,10 +1,12 @@
 .items {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 4rem;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 ITEMS */
+  gap: 1.5rem;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+  max-width: 1300px; /* centers content */
 }
+
 
 .items .links {
   text-decoration: none;
@@ -13,7 +15,8 @@
 
 .items .card {
   position: relative;
-  width: 220px;
+  width: 100%;
+  min-height: 380px;
   border-radius: 16px;
   border: none;
   background: #f9f9f9;
@@ -47,7 +50,7 @@
 
 .items .card-img-top {
   width: 100%;
-  height: 140px;
+  height: 180px;
   object-fit: contain;
 }
 
@@ -125,7 +128,7 @@
   background: #000;
 }
 
-/* Responsive */
+/* Responsive
 @media (max-width: 431px) {
   .items .card {
     width: 90%;
@@ -136,4 +139,25 @@
   .items .card {
     width: 180px;
   }
+} */
+/* Tablets – 3 items */
+@media (max-width: 1024px) {
+  .items {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
+
+/* Large phones – 2 items */
+@media (max-width: 768px) {
+  .items {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small phones – 1 item */
+@media (max-width: 430px) {
+  .items {
+    grid-template-columns: 1fr;
+  }
+}
+

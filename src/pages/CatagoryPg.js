@@ -17,7 +17,7 @@ const CatagoryPg = () => {
       <Navbar />
       <div className="container">
         <div className="container catagoryPg">
-          <h2>Categories</h2>
+          <h2>Catego</h2>
           <hr />
           {catagory && (
             <div className="cats">

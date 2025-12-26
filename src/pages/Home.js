@@ -95,12 +95,9 @@ function Home() {
           </button>
         </div>
         <main className="main1">
-          <div className="coll1">
-            <Catagory />
-          </div>
-          <div className="coll2">
-            <Items />
-          </div>
+          <Catagory />
+
+          <Items />
         </main>
       </div>
       <Footer />
