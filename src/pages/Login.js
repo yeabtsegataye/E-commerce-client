@@ -1,6 +1,6 @@
 import React from "react";
 import "./login.css";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useLogin } from "../hooks/useLogin";
 // import { UseAuthContext } from "../hooks/useAuthContext";
@@ -59,9 +59,9 @@ function Login() {
             Submit
           </button>
           {error && <div className="error">{error}</div>}
-          <p class="signin">
+          {/* <p class="signin">
             Don't have an acount ? <Link to="/signup">Signin</Link>
-          </p>
+          </p> */}
         </form>
       </div>
     </React.Fragment>

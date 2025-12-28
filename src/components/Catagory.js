@@ -11,18 +11,20 @@ const Catagory = () => {
   const catagory = data?.cats;
 
   return (
-    <div className="category-section">
-      <div className="category-header">
+    <div className="home-cat-section">
+      <div className="home-cat-header">
         <h2>Category</h2>
-        <button className="view-all"><a href="/catagory">View All</a></button>
+        <button className="home-cat-view-all">
+          <a href="/catagory">View All</a>
+        </button>
       </div>
 
       {catagory ? (
-        <div className="category-list">
+        <div className="home-cat-list">
           {catagory.map((cat) => (
             <Link
               to={`/categorydetail/${cat._id}`}
-              className="category-item"
+              className="home-cat-item"
               key={cat._id}
             >
               <img src={cat.cat_pic} alt={cat.catagory_Name} />
