@@ -14,10 +14,12 @@
   color: white;
   box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
   position: fixed;
-  height: 100vh;
+  top: 75px;
+  left: 0;
+  height: 100vh; /* full viewport height to avoid gaps when scrolling */
   overflow-y: auto;
   z-index: 100;
-}
+} 
 
 .sidebar-header {
   padding: 30px 25px;
@@ -43,7 +45,7 @@
 
 .sidebar-menu {
   list-style: none;
-  padding: 20px 0;
+  padding: 50px 0;
   margin: 0;
 }
 
@@ -115,7 +117,10 @@
   padding: 25px 40px;
   border-bottom: 1px solid #eaeaea;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
-}
+  position: sticky; /* stick header to top */
+  top: 0;
+  z-index: 110; /* sit above sidebar/content */
+} 
 
 .content-header h1 {
   margin: 0;
@@ -240,24 +245,147 @@
   font-size: 1.1rem;
 }
 
-/* Form Styles */
-.category-form-container {
+/* Form Styles (namespaced for Add Category) */
+.admin-add-cat-container {
   background: white;
-  padding: 40px;
-  border-radius: 20px;
-  max-width: 700px;
-  margin: 30px auto;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  border: 1px solid #eaeaea;
+  padding: 48px;
+  border-radius: 16px;
+  max-width: 960px; /* wider for professional layout */
+  margin: 40px auto;
+  box-shadow: 0 20px 40px rgba(16, 24, 40, 0.08);
+  border: 1px solid #eef2f7;
 }
 
-.category-form-container h2 {
-  color: #2c3e50;
-  margin-bottom: 30px;
-  font-size: 1.6rem;
+.admin-add-cat-container h2 {
+  color: #1f2d3d;
+  margin-bottom: 28px;
+  font-size: 1.8rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+/* Two-column form layout */
+.admin-add-cat-form.admin-add-cat-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 30px;
+  align-items: start;
+}
+
+.admin-add-cat-left {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-add-cat-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* File input wrapper and custom label */
+.admin-add-cat-file-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-add-cat-input-file {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.admin-add-cat-file-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg,#6a7cff,#7bd389);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
   font-weight: 700;
+  box-shadow: 0 6px 18px rgba(69, 90, 229, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-add-cat-file-label:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(69, 90, 229, 0.16); }
+
+.admin-add-cat-note {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+/* Image preview card */
+.admin-add-cat-preview-card {
+  border-radius: 12px;
+  border: 1px dashed #e6eef8;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #ffffff, #fbfcff);
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(16,24,40,0.04);
+}
+
+.admin-add-cat-preview-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.admin-add-cat-placeholder {
+  color: #9aa4b2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   text-align: center;
 }
+
+.admin-add-cat-preview-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.admin-add-cat-remove-btn, .admin-add-cat-view-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.admin-add-cat-remove-btn { background: #ffebee; color: #c62828; }
+.admin-add-cat-view-btn { background: #e8f7ff; color: #0b6fa4; }
+
+/* Primary submit variant */
+.admin-add-cat-submit.primary {
+  background: linear-gradient(90deg,#2dd4bf,#06b6d4);
+  color: white;
+  border-radius: 12px;
+  padding: 14px 22px;
+  box-shadow: 0 12px 30px rgba(6,166,173,0.12);
+}
+
+/* namespaced form buttons */
+.admin-add-cat-form-buttons { display:flex; gap: 12px; align-items: center; margin-top: 12px; }
+
+/* Responsive form grid */
+@media (max-width: 900px) {
+  .admin-add-cat-form.admin-add-cat-form-grid { grid-template-columns: 1fr; }
+  .admin-add-cat-preview-card { min-height: 180px; }
+}
+
 
 .form {
   display: flex;
@@ -267,30 +395,37 @@
 
 .input {
   width: 100%;
-  padding: 16px 20px;
-  border: 2px solid #e0e0e0;
+  padding: 14px 18px;
+  border: 1px solid #e6eef8;
   border-radius: 12px;
   font-size: 1rem;
-  transition: all 0.3s ease;
-  background: #f8f9fa;
+  transition: all 0.18s ease;
+  background: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(16,24,40,0.02);
 }
 
 .input:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: #6a7cff;
   background: white;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  box-shadow: 0 6px 20px rgba(69, 90, 229, 0.06);
 }
 
 .input::placeholder {
-  color: #95a5a6;
+  color: #9aa4b2;
 }
 
 textarea.input {
-  min-height: 120px;
+  min-height: 140px;
   resize: vertical;
   font-family: inherit;
 }
+
+/* slight adjustment to form button area */
+.form-buttons { display:flex; gap: 12px; align-items: center; margin-top: 12px; }
+
+.cancel-btn { background: transparent; border: 1px solid #e6eef8; color: #1f2d3d; }
+
 
 /* Image Preview */
 .image-preview {
@@ -998,12 +1133,17 @@ input[type="tel"] {
   .admin-container {
     flex-direction: column;
   }
-  
+    
+  .sidebar-header {
+    display: none;
+  }
   .admin-sidebar {
     width: 100%;
     height: auto;
-    position: relative;
+    position: sticky; /* make sidebar sticky when middle nav is hidden on small screens */
+    top: 0;
     margin-bottom: 0;
+    z-index: 120;
   }
   
   .admin-main-content {
@@ -1078,10 +1218,7 @@ input[type="tel"] {
     padding: 10px 15px;
     font-size: 0.9rem;
   }
-  
-  .sidebar-header h3 {
-    font-size: 1.2rem;
-  }
+
   
   .stat-card {
     padding: 20px;

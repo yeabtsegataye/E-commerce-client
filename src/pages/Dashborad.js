@@ -75,6 +75,7 @@ function Dashboard() {
 
   // Check admin access
   useEffect(() => {
+    fetchCategories()
     if (!user?.isAdmin) {
       navigate("/");
     }
@@ -291,6 +292,7 @@ function Dashboard() {
       }
 
       const data = await response.json();
+      
       setCategories(data.cats || data);
     } catch (error) {
       Toast({
@@ -748,83 +750,108 @@ function Dashboard() {
   );
 
   const renderAddCategory = () => (
-    <div className="category-form-container">
-      <h2>{editingCategory ? "Edit Category" : "Add New Category"}</h2>
-      <form className="form" onSubmit={handle_submit}>
-        <div className="form-group">
-          <label htmlFor="categoryName">Category Name</label>
-          <input
-            id="categoryName"
-            className="input"
-            type="text"
-            placeholder="Enter category name"
-            required
-            value={catagory_Name}
-            onChange={(e) => setcatagory_Name(e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="categoryDescription">Description</label>
-          <textarea
-            id="categoryDescription"
-            className="input"
-            placeholder="Enter category description"
-            required
-            value={cat_description}
-            onChange={(e) => setcat_description(e.target.value)}
-            rows="4"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="categoryImage">Category Image</label>
-          <input
-            id="categoryImage"
-            className="input"
-            type="file"
-            accept="image/jpeg, image/png"
-            onChange={(e) => handle_upload(e.target.files[0])}
-          />
-        </div>
-
-        {pic && (
-          <div className="image-preview">
-            <img src={pic} alt="Preview" />
+    <div className="admin-add-cat-container">
+      {/* <h2>{editingCategory ? "Edit Category" : "Add New Category"}</h2> */}
+      <form className="admin-add-cat-form admin-add-cat-form-grid" onSubmit={handle_submit}>
+        <div className="admin-add-cat-left">
+          <div className="form-group">
+            <label htmlFor="categoryName">Category Name</label>
+            <input
+              id="categoryName"
+              className="input"
+              type="text"
+              placeholder="Enter category name"
+              required
+              value={catagory_Name}
+              onChange={(e) => setcatagory_Name(e.target.value)}
+            />
           </div>
-        )}
 
-        <div className="form-buttons">
-          {!PicLoading ? (
-            <>
-              <button className="submit" type="submit">
-                <i
-                  className={`fas fa-${editingCategory ? "save" : "plus"}`}
-                ></i>
-                {editingCategory ? "Update Category" : "Add Category"}
+          <div className="form-group">
+            <label htmlFor="categoryDescription">Description</label>
+            <textarea
+              id="categoryDescription"
+              className="input"
+              placeholder="Write a concise description (max 250 chars)"
+              required
+              value={cat_description}
+              onChange={(e) => setcat_description(e.target.value)}
+              rows="5"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Category Image</label>
+            <div className="admin-add-cat-file-wrapper">
+              <input
+                id="categoryImage"
+                className="admin-add-cat-input-file"
+                type="file"
+                accept="image/jpeg, image/png"
+                onChange={(e) => handle_upload(e.target.files[0])}
+              />
+              <label htmlFor="categoryImage" className="admin-add-cat-file-label">
+                <i className="fas fa-upload"></i> Choose Image
+              </label>
+              <small className="admin-add-cat-note">JPEG or PNG recommended — keep file size under 2MB.</small>
+            </div>
+          </div>
+
+          <div className="admin-add-cat-form-buttons">
+            {!PicLoading ? (
+              <>
+                <button className="admin-add-cat-submit primary" type="submit">
+                  <i className={`fas fa-${editingCategory ? "save" : "plus"}`}></i>
+                  {editingCategory ? "Update Category" : "Add Category"}
+                </button>
+
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setcatagory_Name("");
+                    setcat_description("");
+                    setPic(null);
+                    setCurrentView("manageCategories");
+                  }}
+                >
+                  <i className="fas fa-times"></i> Cancel
+                </button>
+              </>
+            ) : (
+              <button className="admin-add-cat-submit" disabled type="button">
+                <div className="spinner-border text-light" role="status">
+                  <span className="visually-hidden">Uploading...</span>
+                </div>
+                Uploading...
               </button>
-              <button
-                type="button"
-                className="cancel-btn"
-                onClick={() => {
-                  setEditingCategory(null);
-                  setcatagory_Name("");
-                  setcat_description("");
-                  setPic(null);
-                  setCurrentView("manageCategories");
-                }}
-              >
-                <i className="fas fa-times"></i> Cancel
-              </button>
-            </>
-          ) : (
-            <button className="submit" disabled type="button">
-              <div className="spinner-border text-light" role="status">
-                <span className="visually-hidden">Uploading...</span>
+            )}
+          </div>
+        </div>
+
+        <div className="form-right">
+          <div className="admin-add-cat-preview-card">
+            {pic ? (
+              <div style={{ width: '100%' }}>
+                <img src={pic} alt="Preview" />
+                <div className="admin-add-cat-preview-actions">
+                  <button type="button" className="admin-add-cat-remove-btn" onClick={() => setPic(null)}>
+                    <i className="fas fa-trash"></i> Remove
+                  </button>
+                  <a className="admin-add-cat-view-btn" href={pic} target="_blank" rel="noreferrer">
+                    <i className="fas fa-external-link-alt"></i> View
+                  </a>
+                </div>
               </div>
-              Uploading...
-            </button>
-          )}
+            ) : (
+              <div className="admin-add-cat-placeholder">
+                <i className="fas fa-image fa-3x"></i>
+                <p>No image uploaded yet</p>
+                <small className="admin-add-cat-note">Preview will appear here when you choose an image.</small>
+              </div>
+            )}
+          </div>
         </div>
       </form>
     </div>
@@ -1195,7 +1222,7 @@ function Dashboard() {
         <div className="admin-sidebar">
           <div className="sidebar-header">
             <h3>
-              <i className="fas fa-crown"></i> Admin Panel
+             
             </h3>
           </div>
           <ul className="sidebar-menu">
@@ -1249,8 +1276,8 @@ function Dashboard() {
               {currentView === "dashboard" && "Dashboard"}
               {currentView === "addCategory" &&
                 (editingCategory ? "Edit Category" : "Add Category")}
-              {currentView === "manageCategories" && "Manage Categories"}
-              {currentView === "manageUsers" && "Manage Users"}
+              {/* {currentView === "manageCategories" && "Manage Categories"} */}
+              {/* {currentView === "manageUsers" && "Manage Users"} */}
               {currentView === "analytics" && "Analytics"}
             </h1>
           </div>

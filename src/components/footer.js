@@ -28,65 +28,9 @@ const Footer = () => {
             ></path>
           </svg>
         </div>
-        <footer className="footer">
-          <div className="footer-content">
-            <div className="footer-links">
-              <div className="footer-grid">
-                <div className="footer-grid-column">
-                  <h4>Categories</h4>
-                  <ul>
-                    <li>Vegetables & Fruits</li>
-                    <li>Breakfast & instant food</li>
-                    <li>Bakery & Biscuits</li>
-                    <li>Atta, rice & dal</li>
-                    <li>Sauces & spreads</li>
-                    <li>Organic & gourmet</li>
-                    <li>Baby care</li>
-                  </ul>
-                </div>
-                <div className="footer-grid-column">
-                  <h4>Cleaning & Personal Care</h4>
-                  <ul>
-                    <li>Cleaning essentials</li>
-                    <li>Personal care</li>
-                    <li>Dairy, bread & eggs</li>
-                    <li>Cold drinks & juices</li>
-                    <li>Tea, coffee & drinks</li>
-                    <li>Masala, oil & more</li>
-                    <li>Chicken, meat & fish</li>
-                    <li>Paan corner</li>
-                  </ul>
-                </div>
-
-                <div className="footer-grid-column">
-                  <h4>Get to know us</h4>
-                  <ul>
-                    <li>Company</li>
-                    <li>About</li>
-                    <li>Blog</li>
-                    <li>Help Center</li>
-                    <li>Our Value</li>
-                  </ul>
-                </div>
-
-                <div className="footer-grid-column">
-                  <h4>Become a Shopper</h4>
-                  <ul>
-                    <li>Shopper Opportunities</li>
-                    <li>Earnings</li>
-                    <li>Ideas & Guides</li>
-                    <li>New Retailers</li>
-                    <li>Freshcart programs</li>
-                    <li>Gift Cards</li>
-                    <li>Promos & Coupons</li>
-                    <li>Freshcart Ads</li>
-                    <li>Careers</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </footer>
+        {/* <footer className="footer">
+      
+        </footer> */}
         <div className="footer-copyright">
           &copy; {new Date().getFullYear()} Your E-commerce App | All rights
           reserved

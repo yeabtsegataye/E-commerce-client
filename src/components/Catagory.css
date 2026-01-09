@@ -35,8 +35,10 @@
   display: flex;
   gap: 1.5rem;
   overflow-x: auto;
-  padding-bottom: 10px;
+  padding: 0 1rem 10px;
   scroll-behavior: smooth;
+  justify-content: center; /* center items when possible */
+  align-items: center;
 }
 
 .home-cat-list::-webkit-scrollbar {

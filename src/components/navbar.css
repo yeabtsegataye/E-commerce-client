@@ -315,6 +315,7 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   animation: fadeIn 0.3s ease-out;
+  z-index: 999;
 }
 
 .snav::-webkit-scrollbar {
@@ -553,8 +554,7 @@
     padding: 0.6rem 0.8rem;
   }
   
-  .search,
-  .nav-right-section {
+  .search {
     display: none !important;
   }
   
@@ -733,4 +733,33 @@
   justify-content: center;
   align-items: center;
   padding: 1rem;
+}
+@media (max-width: 770px) {
+  /* Hide the desktop login/logout buttons */
+  /* .nav-right-section .btns {
+    display: none !important;
+  } */
+  
+  /* Add mobile login/logout button in snav */
+  .mobile-auth-btn {
+    display: flex !important;
+    align-items: center;
+  }
+  
+  .mobile-auth-btn .btn {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: 2px solid var(--primary-color);
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: var(--transition);
+    white-space: nowrap;
+  }
+  
+  .mobile-auth-btn .btn:hover {
+    background-color: var(--white);
+    color: var(--primary-color);
+  }
 }

@@ -70,12 +70,11 @@ const Navbar = () => {
     }
   };
 
-  const handleResultClick = (itemId) => {
-    console.log(itemId, "iiddd");
-    navigate(`/itemdetail/${itemId}`);
-    setShowSearchResults(false);
-    setSearch("");
-  };
+const handleResultClick = (itemId) => {
+  navigate(`/itemdetail/${itemId}`);
+  setShowSearchResults(false);
+  setSearch("");
+};
 
   const handleSearchBlur = () => {
     // Hide results after a short delay to allow clicking on results
@@ -155,8 +154,8 @@ const Navbar = () => {
                           to={`/itemdetail/${it._id}`}
                           key={it._id}
                           className="search-result-item-link"
-                          onClick={() => {
-                            handleResultClick(it._id)
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent event bubbling
                             setShowSearchResults(false);
                             setSearch("");
                           }}
