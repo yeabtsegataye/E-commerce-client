@@ -1,0 +1,24 @@
+Open the app from your phone (same Wi-Fi as your PC)
+=====================================================
+
+1) Find your PC IPv4 address
+   Windows: open PowerShell and run: ipconfig
+   Look for "IPv4 Address" under your active adapter (often 192.168.x.x).
+
+2) Point the React app at your API using that IP (not localhost)
+   Edit this folder's .env file:
+   REACT_APP_URL=http://YOUR_PC_IP:4000
+   (Use the same port as your Node server, e.g. 4000.)
+
+3) Start the backend server on the PC (E-commerce-server) as usual.
+
+4) Start the React dev server so phones can connect:
+   npm run start:lan
+   Then on your phone open: http://YOUR_PC_IP:3000
+
+5) If Windows Firewall blocks it, allow Node.js / private network for ports 3000 and your API port.
+
+Notes
+-----
+- Camera + microphone need a secure context or localhost. Many browsers allow http://192.168.x.x on LAN for getUserMedia; if the camera still fails on iPhone Safari, try Chrome on Android or use HTTPS (e.g. ngrok) for testing.
+- The React dev server must bind to 0.0.0.0 — "npm run start:lan" does that via HOST=0.0.0.0.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import "./admin.css";
@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import {
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -19,6 +21,7 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts";
+import BarcodeScannerModal from "../components/BarcodeScannerModal";
 
 function Dashboard() {
   const API_BASE_URL = process.env.REACT_APP_URL;
@@ -65,6 +68,46 @@ function Dashboard() {
       newItems: 0,
     },
   });
+
+  const [salesPeriod, setSalesPeriod] = useState("daily"); // daily | weekly | monthly | all
+  const [salesAnalytics, setSalesAnalytics] = useState({
+    totals: { soldQty: 0, revenue: 0, cost: 0, profit: 0 },
+    series: [],
+  });
+
+  // Items management states
+  const [itemScanCode, setItemScanCode] = useState("");
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [scannerMountKey, setScannerMountKey] = useState(0);
+  const [scannedItem, setScannedItem] = useState(null);
+  const [scanLoading, setScanLoading] = useState(false);
+  const [scanNotFound, setScanNotFound] = useState(false);
+
+  const [newItem, setNewItem] = useState({
+    Barcode: "",
+    Item_Name: "",
+    Item_Brand: "",
+    Item_Description: "",
+    Item_Category: "",
+    Item_Age: "",
+    Item_Gender: "unisex",
+    StockQty: 0,
+    Item_BoughtPrice: 0,
+    Item_SellingPrice: 0,
+    IsEnabled: true,
+  });
+  const [newItemImage, setNewItemImage] = useState(null);
+  const [creatingItem, setCreatingItem] = useState(false);
+
+  const [itemsMgmt, setItemsMgmt] = useState({
+    items: [],
+    page: 1,
+    hasMore: true,
+    loading: false,
+    search: "",
+    categoryId: "",
+  });
+  const loadMoreRef = useRef(null);
 
   // Loading states
   const [loading, setLoading] = useState({
@@ -115,6 +158,36 @@ function Dashboard() {
     } catch (error) {
       Toast({
         title: "Error fetching analytics",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    } finally {
+      setLoading((prev) => ({ ...prev, analytics: false }));
+    }
+  };
+
+  const fetchSalesAnalytics = async (period = salesPeriod) => {
+    if (!user?.token) return;
+    setLoading((prev) => ({ ...prev, analytics: true }));
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/admin/sales-analytics?period=${encodeURIComponent(period)}`,
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to load sales analytics");
+      }
+
+      const data = await response.json();
+      setSalesAnalytics({ totals: data.totals, series: data.series || [] });
+    } catch (error) {
+      Toast({
+        title: "Error fetching sales analytics",
         description: error.message,
         status: "error",
         duration: 5000,
@@ -316,6 +389,7 @@ function Dashboard() {
       switch (currentView) {
         case "dashboard":
           await fetchAnalytics();
+          await fetchSalesAnalytics(salesPeriod);
           break;
         case "manageCategories":
           await fetchCategories();
@@ -326,6 +400,10 @@ function Dashboard() {
         case "analytics":
           await fetchAnalytics();
           break;
+        case "itemsManagement":
+          await fetchCategories();
+          await fetchAdminItems({ reset: true });
+          break;
         default:
           break;
       }
@@ -333,6 +411,277 @@ function Dashboard() {
 
     loadData();
   }, [currentView, user?.isAdmin, user?.token]);
+
+  const authHeaders = useMemo(() => {
+    if (!user?.token) return {};
+    return { Authorization: `Bearer ${user.token}` };
+  }, [user?.token]);
+
+  const fetchAdminItems = async ({ reset } = { reset: false }) => {
+    if (!user?.token) return;
+    setItemsMgmt((prev) => ({ ...prev, loading: true }));
+    try {
+      const page = reset ? 1 : itemsMgmt.page;
+      const params = new URLSearchParams();
+      params.set("page", String(page));
+      params.set("limit", "10");
+      if (itemsMgmt.search.trim()) params.set("search", itemsMgmt.search.trim());
+      if (itemsMgmt.categoryId) params.set("categoryId", itemsMgmt.categoryId);
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/items?${params.toString()}`, {
+        headers: authHeaders,
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to load items");
+      }
+      const data = await response.json();
+      setItemsMgmt((prev) => ({
+        ...prev,
+        items: reset ? data.items : [...prev.items, ...data.items],
+        page: page + 1,
+        hasMore: Boolean(data.hasMore),
+        loading: false,
+      }));
+    } catch (error) {
+      setItemsMgmt((prev) => ({ ...prev, loading: false }));
+      Toast({
+        title: "Error loading items",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (currentView !== "itemsManagement") return;
+    if (!loadMoreRef.current) return;
+    if (!itemsMgmt.hasMore) return;
+
+    const el = loadMoreRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && !itemsMgmt.loading) {
+          fetchAdminItems({ reset: false });
+        }
+      },
+      { root: null, rootMargin: "250px", threshold: 0.01 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [currentView, itemsMgmt.hasMore, itemsMgmt.loading, itemsMgmt.page, itemsMgmt.search, itemsMgmt.categoryId]);
+
+  const lookupBarcode = async (rawCode) => {
+    const code = String(rawCode || "").trim();
+    if (!code) return;
+
+    setItemScanCode(code);
+    setScanLoading(true);
+    setScannedItem(null);
+    setScanNotFound(false);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/items/by-barcode/${encodeURIComponent(code)}`, {
+        headers: authHeaders,
+      });
+
+      if (response.status === 404) {
+        setScanNotFound(true);
+        setNewItem((prev) => ({ ...prev, Barcode: code }));
+        return;
+      }
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || "Lookup failed");
+      }
+      const data = await response.json();
+      setScannedItem(data.item);
+    } catch (error) {
+      Toast({
+        title: "Barcode lookup failed",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    } finally {
+      setScanLoading(false);
+    }
+  };
+
+  const handleScanLookup = async (e) => {
+    e.preventDefault();
+    await lookupBarcode(itemScanCode);
+  };
+
+  const handleToggleEnabled = async (itemId, nextEnabled) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/items/${itemId}/enabled`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+        },
+        body: JSON.stringify({ isEnabled: nextEnabled }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to update item");
+      }
+      const data = await response.json();
+
+      setItemsMgmt((prev) => ({
+        ...prev,
+        items: prev.items.map((it) => (it._id === data.item._id ? data.item : it)),
+      }));
+      if (scannedItem?._id === data.item._id) setScannedItem(data.item);
+    } catch (error) {
+      Toast({
+        title: "Update failed",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
+
+  const handleMarkSold = async ({ barcode, itemId, qty }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/items/sell`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+        },
+        body: JSON.stringify({ barcode, itemId, qty }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to mark sold");
+      }
+      const data = await response.json();
+      setItemsMgmt((prev) => ({
+        ...prev,
+        items: prev.items.map((it) => (it._id === data.item._id ? data.item : it)),
+      }));
+      if (scannedItem?._id === data.item._id) setScannedItem(data.item);
+      Toast({
+        title: "Sold recorded",
+        status: "success",
+        duration: 2500,
+        isClosable: true,
+        position: "bottom",
+      });
+    } catch (error) {
+      Toast({
+        title: "Sell failed",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
+  };
+
+  const handleCreateItemFromScan = async (e) => {
+    e.preventDefault();
+    if (!newItemImage) {
+      Toast({
+        title: "Image required",
+        description: "Please capture or upload an item image",
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+        position: "bottom",
+      });
+      return;
+    }
+    if (!newItem.Item_Category) {
+      Toast({
+        title: "Category required",
+        description: "Please select a category",
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+        position: "bottom",
+      });
+      return;
+    }
+
+    setCreatingItem(true);
+    try {
+      const form = new FormData();
+      form.append("Item_Images", newItemImage);
+      form.append("Barcode", newItem.Barcode);
+      form.append("Item_Name", newItem.Item_Name);
+      form.append("Item_Brand", newItem.Item_Brand);
+      form.append("Item_Description", newItem.Item_Description);
+      form.append("Item_Category", newItem.Item_Category);
+      form.append("Item_poster", user.id);
+      form.append("Item_Age", String(newItem.Item_Age || 0));
+      form.append("Item_Gender", newItem.Item_Gender);
+      form.append("StockQty", String(newItem.StockQty || 0));
+      form.append("Item_BoughtPrice", String(newItem.Item_BoughtPrice || 0));
+      form.append("Item_SellingPrice", String(newItem.Item_SellingPrice || 0));
+      form.append("Item_Price", String(newItem.Item_SellingPrice || 0)); // compatibility
+      form.append("IsEnabled", String(Boolean(newItem.IsEnabled)));
+
+      const response = await fetch(`${API_BASE_URL}/ip/item/newitems`, {
+        method: "POST",
+        body: form,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create item");
+      }
+
+      Toast({
+        title: "Item created",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "bottom",
+      });
+
+      setScanNotFound(false);
+      setNewItemImage(null);
+      setNewItem({
+        Barcode: "",
+        Item_Name: "",
+        Item_Brand: "",
+        Item_Description: "",
+        Item_Category: "",
+        Item_Age: "",
+        Item_Gender: "unisex",
+        StockQty: 0,
+        Item_BoughtPrice: 0,
+        Item_SellingPrice: 0,
+        IsEnabled: true,
+      });
+      setItemScanCode("");
+
+      // Refresh list
+      await fetchAdminItems({ reset: true });
+    } catch (error) {
+      Toast({
+        title: "Create failed",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    } finally {
+      setCreatingItem(false);
+    }
+  };
 
   // Handle image upload
   const handle_upload = async (pic) => {
@@ -607,6 +956,8 @@ function Dashboard() {
         return renderManageCategories();
       case "manageUsers":
         return renderManageUsers();
+      case "itemsManagement":
+        return renderItemsManagement();
       // case "analytics":
       //   return renderAnalytics();
       default:
@@ -652,9 +1003,9 @@ function Dashboard() {
             <i className="fas fa-chart-line"></i>
           </div>
           <div className="stat-info">
-            <h3>Recent Users (7d)</h3>
+            <h3>Items Sold</h3>
             <p className="stat-number">
-              {analytics.recentActivity?.newUsers || 0}
+              {salesAnalytics.totals?.soldQty || 0}
             </p>
           </div>
         </div>
@@ -670,6 +1021,111 @@ function Dashboard() {
         </div>
       ) : (
         <>
+          <div className="stats-grid" style={{ marginBottom: 20 }}>
+            <div className="stat-card">
+              <div className="stat-icon">
+                <i className="fas fa-money-bill-wave"></i>
+              </div>
+              <div className="stat-info">
+                <h3>Revenue</h3>
+                <p className="stat-number">
+                  {Number(salesAnalytics.totals?.revenue || 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">
+                <i className="fas fa-coins"></i>
+              </div>
+              <div className="stat-info">
+                <h3>Profit</h3>
+                <p className="stat-number">
+                  {Number(salesAnalytics.totals?.profit || 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="section-header" style={{ marginTop: 10 }}>
+            <h2 style={{ fontSize: "1.4rem" }}>Sales Analytics</h2>
+            <div className="header-actions">
+              <button
+                className="add-new-btn"
+                type="button"
+                onClick={() => {
+                  setSalesPeriod("daily");
+                  fetchSalesAnalytics("daily");
+                }}
+              >
+                Daily
+              </button>
+              <button
+                className="add-new-btn"
+                type="button"
+                onClick={() => {
+                  setSalesPeriod("weekly");
+                  fetchSalesAnalytics("weekly");
+                }}
+              >
+                Weekly
+              </button>
+              <button
+                className="add-new-btn"
+                type="button"
+                onClick={() => {
+                  setSalesPeriod("monthly");
+                  fetchSalesAnalytics("monthly");
+                }}
+              >
+                Monthly
+              </button>
+              <button
+                className="add-new-btn"
+                type="button"
+                onClick={() => {
+                  setSalesPeriod("all");
+                  fetchSalesAnalytics("all");
+                }}
+              >
+                All time
+              </button>
+            </div>
+          </div>
+
+          <div className="analytics-stats">
+            <div className="analytics-stat-card">
+              <h3>Profit over time</h3>
+              <div className="chart-wrapper">
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={salesAnalytics.series}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="profit" stroke="#27ae60" name="Profit" />
+                    <Line type="monotone" dataKey="revenue" stroke="#3498db" name="Revenue" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="analytics-stat-card">
+              <h3>Sold quantity over time</h3>
+              <div className="chart-wrapper">
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={salesAnalytics.series}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="soldQty" fill="#9b59b6" name="Sold Qty" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
           <div className="analytics-stats">
             <div className="analytics-stat-card">
               <h3>Items per Category</h3>
@@ -1214,6 +1670,336 @@ function Dashboard() {
     </div>
   );
 
+  const renderItemsManagement = () => (
+    <div className="manage-items">
+      <div className="section-header">
+        <h2>Items Management</h2>
+        <button
+          onClick={() => fetchAdminItems({ reset: true })}
+          className="refresh-btn"
+          title="Refresh Items"
+        >
+          <i className="fas fa-sync-alt"></i>
+        </button>
+      </div>
+
+      <div className="items-tools">
+        <form className="scan-form" onSubmit={handleScanLookup}>
+          <div className="form-group">
+            <label>Scan / Enter Barcode</label>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+              <input
+                className="input"
+                type="text"
+                value={itemScanCode}
+                placeholder="Or type barcode and press Lookup"
+                onChange={(e) => setItemScanCode(e.target.value)}
+                style={{ flex: "1 1 200px", minWidth: 0 }}
+              />
+              <button
+                type="button"
+                className="add-new-btn"
+                onClick={() => {
+                  setScannerMountKey((k) => k + 1);
+                  setShowBarcodeScanner(true);
+                }}
+                title="Use device camera"
+              >
+                <i className="fas fa-camera"></i> Scan with camera
+              </button>
+              <button className="submit" type="submit" disabled={scanLoading}>
+                {scanLoading ? "Checking..." : "Lookup"}
+              </button>
+            </div>
+            <small className="admin-add-cat-note">
+              Prefer the camera: tap <strong>Scan with camera</strong>. USB scanners can still type the code and press Enter.
+            </small>
+          </div>
+        </form>
+
+        {scannedItem && (
+          <div className="scan-result-card">
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              <img
+                src={scannedItem.Item_Images}
+                alt={scannedItem.Item_Name}
+                style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 10 }}
+              />
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: 0 }}>{scannedItem.Item_Name}</h3>
+                <div className="item-meta">
+                  <span className="item-pill">
+                    Barcode: {scannedItem.Barcode || "-"}
+                  </span>
+                  <span className="item-pill">Stock: {scannedItem.StockQty ?? 0}</span>
+                  <span className={`item-pill ${scannedItem.IsEnabled ? "enabled" : "disabled"}`}>
+                    {scannedItem.IsEnabled ? "Enabled" : "Disabled"}
+                  </span>
+                  <span className="item-pill">
+                    Selling: {scannedItem.Item_SellingPrice ?? scannedItem.Item_Price ?? 0}
+                  </span>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                <button
+                  className="edit-btn"
+                  type="button"
+                  onClick={() => handleMarkSold({ itemId: scannedItem._id, qty: 1 })}
+                >
+                  Mark Sold (1)
+                </button>
+                <button
+                  className="edit-btn"
+                  type="button"
+                  onClick={() => handleToggleEnabled(scannedItem._id, !scannedItem.IsEnabled)}
+                >
+                  {scannedItem.IsEnabled ? "Disable" : "Enable"}
+                </button>
+                <button
+                  className="add-new-btn"
+                  type="button"
+                  onClick={() => navigate(`/itemdetail/${scannedItem._id}`)}
+                >
+                  View
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {scanNotFound && (
+          <div className="scan-create-card">
+            <h3>Barcode not found — add new item</h3>
+            <form onSubmit={handleCreateItemFromScan}>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Barcode</label>
+                  <input className="input" value={newItem.Barcode} disabled />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Category</label>
+                  <select
+                    className="input"
+                    value={newItem.Item_Category}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, Item_Category: e.target.value }))}
+                  >
+                    <option value="">Select category</option>
+                    {categories.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.catagory_Name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Name</label>
+                  <input
+                    className="input"
+                    value={newItem.Item_Name}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, Item_Name: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Brand</label>
+                  <input
+                    className="input"
+                    value={newItem.Item_Brand}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, Item_Brand: e.target.value }))}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  className="input"
+                  rows="3"
+                  value={newItem.Item_Description}
+                  onChange={(e) => setNewItem((prev) => ({ ...prev, Item_Description: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Bought Price (admin only)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min="0"
+                    value={newItem.Item_BoughtPrice}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, Item_BoughtPrice: Number(e.target.value) }))}
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Selling Price</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min="0"
+                    value={newItem.Item_SellingPrice}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, Item_SellingPrice: Number(e.target.value) }))}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Stock Qty</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min="0"
+                    value={newItem.StockQty}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, StockQty: Number(e.target.value) }))}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Image (capture or upload)</label>
+                  <input
+                    className="input"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => setNewItemImage(e.target.files?.[0] || null)}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Enabled</label>
+                  <select
+                    className="input"
+                    value={newItem.IsEnabled ? "true" : "false"}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, IsEnabled: e.target.value === "true" }))}
+                  >
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </select>
+                </div>
+              </div>
+
+              {newItemImage && (
+                <div className="image-preview" style={{ marginTop: 10 }}>
+                  <img src={URL.createObjectURL(newItemImage)} alt="New item preview" />
+                </div>
+              )}
+
+              <div className="modal-actions" style={{ marginTop: 12 }}>
+                <button type="submit" className="submit" disabled={creatingItem}>
+                  {creatingItem ? "Adding..." : "Add Item"}
+                </button>
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => {
+                    setScanNotFound(false);
+                    setNewItemImage(null);
+                  }}
+                  disabled={creatingItem}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+
+      <div className="items-filters">
+        <div className="form-row">
+          <div className="form-group" style={{ flex: 2 }}>
+            <label>Search</label>
+            <input
+              className="input"
+              value={itemsMgmt.search}
+              placeholder="Search by name, brand, or barcode"
+              onChange={(e) => setItemsMgmt((prev) => ({ ...prev, search: e.target.value }))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") fetchAdminItems({ reset: true });
+              }}
+            />
+          </div>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label>Category</label>
+            <select
+              className="input"
+              value={itemsMgmt.categoryId}
+              onChange={(e) => setItemsMgmt((prev) => ({ ...prev, categoryId: e.target.value }))}
+            >
+              <option value="">All categories</option>
+              {categories.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.catagory_Name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group" style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+            <button className="submit" type="button" onClick={() => fetchAdminItems({ reset: true })}>
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="items-list">
+        {itemsMgmt.items.map((it) => (
+          <div key={it._id} className="category-card" style={{ display: "flex", gap: 12 }}>
+            <div className="category-image" style={{ width: 110, height: 110, flex: "0 0 110px" }}>
+              <img src={it.Item_Images} alt={it.Item_Name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+            <div className="category-info" style={{ flex: 1 }}>
+              <h3 style={{ marginBottom: 4 }}>{it.Item_Name}</h3>
+              <div className="item-meta">
+                <span className="item-pill">Barcode: {it.Barcode || "-"}</span>
+                <span className="item-pill">Stock: {it.StockQty ?? 0}</span>
+                <span className="item-pill">Sold: {it.SoldQty ?? 0}</span>
+                <span className={`item-pill ${it.IsEnabled ? "enabled" : "disabled"}`}>
+                  {it.IsEnabled ? "Enabled" : "Disabled"}
+                </span>
+                <span className="item-pill">
+                  Selling: {it.Item_SellingPrice ?? it.Item_Price ?? 0}
+                </span>
+              </div>
+              <div className="category-actions" style={{ gap: 8, flexWrap: "wrap" }}>
+                <button className="edit-btn" type="button" onClick={() => handleMarkSold({ itemId: it._id, qty: 1 })}>
+                  Mark Sold
+                </button>
+                <button
+                  className="edit-btn"
+                  type="button"
+                  onClick={() => handleToggleEnabled(it._id, !it.IsEnabled)}
+                >
+                  {it.IsEnabled ? "Disable" : "Enable"}
+                </button>
+                <button className="add-new-btn" type="button" onClick={() => navigate(`/itemdetail/${it._id}`)}>
+                  View
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {itemsMgmt.loading && <LoadingSpinner />}
+        <div ref={loadMoreRef} style={{ height: 1 }} />
+        {!itemsMgmt.loading && !itemsMgmt.hasMore && itemsMgmt.items.length > 0 && (
+          <div className="empty-state">
+            <p>No more items.</p>
+          </div>
+        )}
+        {!itemsMgmt.loading && itemsMgmt.items.length === 0 && (
+          <EmptyState icon="box-open" message="No items found. Try adjusting filters or add via barcode scan." />
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Navbar />
@@ -1251,6 +2037,12 @@ function Dashboard() {
               <i className="fas fa-users-cog"></i> Manage Users
             </li>
             <li
+              className={currentView === "itemsManagement" ? "active" : ""}
+              onClick={() => setCurrentView("itemsManagement")}
+            >
+              <i className="fas fa-box"></i> Items Management
+            </li>
+            <li
               className={currentView === "addUser" ? "active" : ""}
               onClick={() => {
                 setCurrentView("manageUsers");
@@ -1278,6 +2070,7 @@ function Dashboard() {
                 (editingCategory ? "Edit Category" : "Add Category")}
               {/* {currentView === "manageCategories" && "Manage Categories"} */}
               {/* {currentView === "manageUsers" && "Manage Users"} */}
+              {currentView === "itemsManagement" && "Items Management"}
               {currentView === "analytics" && "Analytics"}
             </h1>
           </div>
@@ -1285,6 +2078,13 @@ function Dashboard() {
         </div>
       </div>
       <Footer />
+      {showBarcodeScanner && (
+        <BarcodeScannerModal
+          key={scannerMountKey}
+          onClose={() => setShowBarcodeScanner(false)}
+          onScan={(code) => lookupBarcode(code)}
+        />
+      )}
     </>
   );
 }

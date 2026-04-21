@@ -70,11 +70,11 @@ const Navbar = () => {
     }
   };
 
-const handleResultClick = (itemId) => {
-  navigate(`/itemdetail/${itemId}`);
-  setShowSearchResults(false);
-  setSearch("");
-};
+  const handleResultClick = (itemId) => {
+    navigate(`/itemdetail/${itemId}`);
+    setShowSearchResults(false);
+    setSearch("");
+  };
 
   const handleSearchBlur = () => {
     // Hide results after a short delay to allow clicking on results
@@ -150,14 +150,21 @@ const handleResultClick = (itemId) => {
                   ) : searchResult.length > 0 ? (
                     <div className="search-results-list">
                       {searchResult.slice(0, 5).map((it) => (
-                        <Link
-                          to={`/itemdetail/${it._id}`}
+                        <div
                           key={it._id}
                           className="search-result-item-link"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent event bubbling
-                            setShowSearchResults(false);
-                            setSearch("");
+                          role="button"
+                          tabIndex={0}
+                          onMouseDown={(e) => {
+                            // Ensure navigation happens before input blur hides dropdown
+                            e.preventDefault();
+                            handleResultClick(it._id);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleResultClick(it._id);
+                            }
                           }}
                         >
                           <div className="search-result-item">
@@ -178,7 +185,7 @@ const handleResultClick = (itemId) => {
                               </span>
                             </div>
                           </div>
-                        </Link>
+                        </div>
                       ))}
                       {searchResult.length > 5 && (
                         <div

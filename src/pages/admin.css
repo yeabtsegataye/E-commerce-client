@@ -669,6 +669,139 @@ textarea.input {
   padding: 40px;
 }
 
+/* =========================
+   Items Management (Admin)
+   ========================= */
+.manage-items {
+  padding: 40px;
+}
+
+.items-tools {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.scan-form,
+.items-filters {
+  background: white;
+  border-radius: 16px;
+  padding: 22px;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.scan-form .input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+.scan-result-card,
+.scan-create-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  border-radius: 16px;
+  padding: 22px;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 6px 24px rgba(16, 24, 40, 0.08);
+}
+
+.scan-result-card h3,
+.scan-create-card h3 {
+  margin: 0 0 12px 0;
+  color: #1f2d3d;
+  font-weight: 800;
+}
+
+.items-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+/* A dedicated item card (reuse category-card markup) */
+.manage-items .category-card {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.manage-items .category-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Item card body */
+.manage-items .category-info {
+  padding: 18px 18px 20px 18px;
+}
+
+.manage-items .category-info h3 {
+  font-size: 1.15rem;
+  margin-bottom: 6px;
+}
+
+.manage-items .category-info p {
+  margin-bottom: 10px;
+  color: #667085;
+}
+
+/* Action buttons cluster */
+.manage-items .category-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.manage-items .edit-btn,
+.manage-items .add-new-btn {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+/* compact metadata pills */
+.item-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 8px 0 12px 0;
+}
+
+.item-pill {
+  background: #f3f6fb;
+  border: 1px solid #e6eef8;
+  color: #34495e;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.item-pill.enabled {
+  background: rgba(46, 204, 113, 0.12);
+  border-color: rgba(46, 204, 113, 0.25);
+  color: #1f8b4c;
+}
+
+.item-pill.disabled {
+  background: rgba(231, 76, 60, 0.1);
+  border-color: rgba(231, 76, 60, 0.22);
+  color: #b3392f;
+}
+
+@media (min-width: 900px) {
+  .items-tools {
+    grid-template-columns: 1.2fr 0.8fr;
+    align-items: start;
+  }
+
+  .scan-result-card,
+  .scan-create-card {
+    position: sticky;
+    top: 110px; /* below admin header */
+  }
+}
+
 /* Users Table */
 .users-table-container {
   background: white;
@@ -1184,6 +1317,10 @@ input[type="tel"] {
   .manage-categories,
   .manage-users,
   .analytics-dashboard {
+    padding: 25px;
+  }
+
+  .manage-items {
     padding: 25px;
   }
   
