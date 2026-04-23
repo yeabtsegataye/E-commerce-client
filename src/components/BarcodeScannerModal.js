@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BrowserMultiFormatReader, BrowserCodeReader } from "@zxing/browser";
-import { DecodeHintType, NotFoundException } from "@zxing/library";
+import { BarcodeFormat, DecodeHintType, NotFoundException } from "@zxing/library";
 import "./BarcodeScannerModal.css";
 
 function isNotFoundError(error) {
@@ -48,6 +48,110 @@ function stopVideoTracks(videoEl) {
   }
 }
 
+function makeCanvas(w, h) {
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.floor(w));
+  c.height = Math.max(1, Math.floor(h));
+  return c;
+}
+
+function rotateCanvas90(src) {
+  const dst = makeCanvas(src.height, src.width);
+  const ctx = dst.getContext("2d");
+  if (!ctx) return null;
+  ctx.translate(dst.width / 2, dst.height / 2);
+  ctx.rotate(Math.PI / 2);
+  ctx.drawImage(src, -src.width / 2, -src.height / 2);
+  return dst;
+}
+
+function rotateCanvas180(src) {
+  const dst = makeCanvas(src.width, src.height);
+  const ctx = dst.getContext("2d");
+  if (!ctx) return null;
+  ctx.translate(dst.width / 2, dst.height / 2);
+  ctx.rotate(Math.PI);
+  ctx.drawImage(src, -src.width / 2, -src.height / 2);
+  return dst;
+}
+
+function rotateCanvas270(src) {
+  const dst = makeCanvas(src.height, src.width);
+  const ctx = dst.getContext("2d");
+  if (!ctx) return null;
+  ctx.translate(dst.width / 2, dst.height / 2);
+  ctx.rotate((3 * Math.PI) / 2);
+  ctx.drawImage(src, -src.width / 2, -src.height / 2);
+  return dst;
+}
+
+function preprocessCanvas(src, mode) {
+  const dst = makeCanvas(src.width, src.height);
+  const ctx = dst.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.drawImage(src, 0, 0);
+  const img = ctx.getImageData(0, 0, dst.width, dst.height);
+  const d = img.data;
+
+  // Convert to luma once
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i];
+    const g = d[i + 1];
+    const b = d[i + 2];
+    const y = (0.2126 * r + 0.7152 * g + 0.0722 * b) | 0;
+    d[i] = y;
+    d[i + 1] = y;
+    d[i + 2] = y;
+  }
+
+  if (mode === "invert") {
+    for (let i = 0; i < d.length; i += 4) {
+      d[i] = 255 - d[i];
+      d[i + 1] = 255 - d[i + 1];
+      d[i + 2] = 255 - d[i + 2];
+    }
+  } else if (mode === "threshold") {
+    // Simple global threshold: decent for printed barcodes with high contrast
+    let sum = 0;
+    for (let i = 0; i < d.length; i += 4) sum += d[i];
+    const t = sum / (d.length / 4);
+    for (let i = 0; i < d.length; i += 4) {
+      const v = d[i] > t ? 255 : 0;
+      d[i] = v;
+      d[i + 1] = v;
+      d[i + 2] = v;
+    }
+  } else if (mode === "contrast") {
+    // Mild contrast boost (clamped)
+    const factor = 1.35;
+    for (let i = 0; i < d.length; i += 4) {
+      const v = d[i];
+      const nv = Math.max(0, Math.min(255, (v - 128) * factor + 128));
+      d[i] = nv;
+      d[i + 1] = nv;
+      d[i + 2] = nv;
+    }
+  }
+
+  ctx.putImageData(img, 0, 0);
+  return dst;
+}
+
+function scaleCanvas(src, scale, maxDim = 2600) {
+  const w = src.width;
+  const h = src.height;
+  if (!w || !h) return null;
+  const sw = Math.min(Math.floor(w * scale), maxDim);
+  const sh = Math.min(Math.floor(h * scale), maxDim);
+  if (sw < 2 || sh < 2) return null;
+  const dst = makeCanvas(sw, sh);
+  const ctx = dst.getContext("2d");
+  if (!ctx) return null;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(src, 0, 0, sw, sh);
+  return dst;
+}
+
 /** Draw several canvases from a video frame (full, crop, upscale) for harder reads. */
 function buildCaptureFrames(video) {
   const w = video.videoWidth;
@@ -62,41 +166,76 @@ function buildCaptureFrames(video) {
     out.push(canvas);
   };
 
-  const full = document.createElement("canvas");
-  full.width = w;
-  full.height = h;
+  const full = makeCanvas(w, h);
   draw(full, (ctx) => ctx.drawImage(video, 0, 0));
 
-  const cw = Math.floor(w * 0.65);
-  const ch = Math.floor(h * 0.65);
-  const crop = document.createElement("canvas");
-  crop.width = cw;
-  crop.height = ch;
+  const cw = Math.floor(w * 0.7);
+  const ch = Math.floor(h * 0.7);
+  const crop = makeCanvas(cw, ch);
   draw(crop, (ctx) =>
     ctx.drawImage(video, (w - cw) / 2, (h - ch) / 2, cw, ch, 0, 0, cw, ch)
   );
 
-  const scale = document.createElement("canvas");
-  const sw = Math.min(Math.floor(w * 1.75), 2400);
-  const sh = Math.min(Math.floor(h * 1.75), 2400);
-  scale.width = sw;
-  scale.height = sh;
-  draw(scale, (ctx) => ctx.drawImage(video, 0, 0, sw, sh));
+  const scale = makeCanvas(
+    Math.min(Math.floor(w * 1.9), 2400),
+    Math.min(Math.floor(h * 1.9), 2400)
+  );
+  draw(scale, (ctx, c) => ctx.drawImage(video, 0, 0, c.width, c.height));
 
   return out;
 }
 
-function tryDecodeCanvases(reader, canvases) {
-  for (const canvas of canvases) {
+function tryDecodeCanvasVariants(reader, base) {
+  const queue = [];
+
+  const push = (c) => {
+    if (c && c.width >= 2 && c.height >= 2) queue.push(c);
+  };
+
+  // Base + scaled
+  push(base);
+  push(scaleCanvas(base, 1.35));
+  push(scaleCanvas(base, 1.75));
+
+  // Preprocess passes
+  push(preprocessCanvas(base, "contrast"));
+  push(preprocessCanvas(base, "invert"));
+  push(preprocessCanvas(base, "threshold"));
+
+  // Rotations (many images are rotated / mirrored)
+  const r90 = rotateCanvas90(base);
+  const r180 = rotateCanvas180(base);
+  const r270 = rotateCanvas270(base);
+  push(r90);
+  push(r180);
+  push(r270);
+  if (r90) {
+    push(preprocessCanvas(r90, "contrast"));
+    push(preprocessCanvas(r90, "threshold"));
+  }
+  if (r270) {
+    push(preprocessCanvas(r270, "contrast"));
+    push(preprocessCanvas(r270, "threshold"));
+  }
+
+  for (const canvas of queue) {
     try {
       const result = reader.decodeFromCanvas(canvas);
       const text = result.getText()?.trim();
       if (text) return text;
     } catch (e) {
       if (!isNotFoundError(e) && !(e?.name === "NotFoundException")) {
-        /* try next */
+        // ignore and continue through variants
       }
     }
+  }
+  return null;
+}
+
+function tryDecodeCanvases(reader, canvases) {
+  for (const base of canvases) {
+    const text = tryDecodeCanvasVariants(reader, base);
+    if (text) return text;
   }
   return null;
 }
@@ -125,6 +264,22 @@ function BarcodeScannerModal({ onClose, onScan }) {
   const readerStill = useMemo(() => {
     const hints = new Map();
     hints.set(DecodeHintType.TRY_HARDER, true);
+    // Common formats; still broad enough but avoids some false paths.
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+      BarcodeFormat.CODE_128,
+      BarcodeFormat.CODE_39,
+      BarcodeFormat.CODE_93,
+      BarcodeFormat.EAN_13,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.UPC_A,
+      BarcodeFormat.UPC_E,
+      BarcodeFormat.ITF,
+      BarcodeFormat.CODABAR,
+      BarcodeFormat.QR_CODE,
+      BarcodeFormat.DATA_MATRIX,
+      BarcodeFormat.PDF_417,
+      BarcodeFormat.AZTEC,
+    ]);
     return new BrowserMultiFormatReader(hints, {});
   }, []);
 
@@ -414,10 +569,22 @@ function BarcodeScannerModal({ onClose, onScan }) {
       e.target.value = "";
       if (!file || busy) return;
       setBusy(true);
-      const url = URL.createObjectURL(file);
       try {
-        const result = await readerStill.decodeFromImageUrl(url);
-        const text = result.getText()?.trim();
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.decoding = "async";
+        img.src = url;
+        await new Promise((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("Image load failed"));
+        });
+        URL.revokeObjectURL(url);
+
+        // Draw to canvases and run the same multi-pass decode as camera capture
+        const base = makeCanvas(img.naturalWidth || img.width, img.naturalHeight || img.height);
+        const ctx = base.getContext("2d");
+        if (ctx) ctx.drawImage(img, 0, 0);
+        const text = tryDecodeCanvases(readerStill, [base]);
         if (text) {
           finishWithCode(text);
           return;
@@ -426,7 +593,6 @@ function BarcodeScannerModal({ onClose, onScan }) {
       } catch {
         window.alert("Could not read a code from that image.");
       } finally {
-        URL.revokeObjectURL(url);
         setBusy(false);
       }
     },
@@ -503,6 +669,11 @@ function BarcodeScannerModal({ onClose, onScan }) {
             muted
             autoPlay
           />
+          <div className="barcode-scanner-reticle" aria-hidden="true">
+            <div className="barcode-scan-box">
+              <div className="barcode-scan-line" />
+            </div>
+          </div>
           {busy && (
             <div className="barcode-scanner-busy" aria-busy="true">
               Reading…
