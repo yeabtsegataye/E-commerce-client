@@ -98,8 +98,8 @@ const Navbar = () => {
     <React.Fragment>
       <nav className="navbar">
         <a className="navbar-brand me-auto" href="/">
-          <i className="fa-solid fa-cart-shopping"></i>
-          Gebayachn
+          <i className="fa-solid fa-spa"></i>
+          MK_cosmo
         </a>
 
         <div className="search">

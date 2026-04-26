@@ -1202,6 +1202,7 @@ textarea.input {
 .header-actions {
   display: flex;
   gap: 15px;
+  flex-wrap: wrap;
 }
 
 /* Phone input styling */
@@ -1326,6 +1327,17 @@ input[type="tel"] {
   
   .content-header {
     padding: 20px 25px;
+  }
+
+  .header-actions {
+    gap: 10px;
+  }
+
+  .header-actions .add-new-btn {
+    flex: 1 1 140px;
+    justify-content: center;
+    padding: 12px 14px;
+    font-size: 0.95rem;
   }
   
   .analytics-stats {

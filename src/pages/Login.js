@@ -3,6 +3,7 @@ import "./login.css";
 // import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useLogin } from "../hooks/useLogin";
+import { Link } from "react-router-dom";
 // import { UseAuthContext } from "../hooks/useAuthContext";
 // import { useValidator } from "../hooks/useValidator";
 function Login() {
@@ -25,44 +26,65 @@ function Login() {
   };
   return (
     <React.Fragment>
-      <div className="containers_login" onSubmit={handle_submit}>
-        <form class="form">
-          <p class="title">Login </p>
-          <p class="message">Login now and get full access to our app. </p>
-          <label>
-            <input
-              class="input"
-              type="email"
-              placeholder="Email"
-              required
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-              }}
-            />
-          </label>
+      <div className="auth-page">
+        <div className="auth-card">
+          <div
+            className="auth-media"
+            aria-hidden="true"
+            style={{
+              backgroundImage: `linear-gradient(135deg, rgba(255, 90, 0, 0.10), rgba(255, 61, 127, 0.10)), url(${process.env.PUBLIC_URL}/loginIMG.png)`,
+            }}
+          ></div>
 
-          <label>
-            <input
-              class="input"
-              type="password"
-              placeholder="Password"
-              required
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-              }}
-            />
-          </label>
+          <div className="auth-form-wrap">
+            <div className="auth-header">
+              <div className="auth-brand">
+                <i className="fa-solid fa-spa" aria-hidden="true"></i>
+                <span>MK_cosmo</span>
+              </div>
+              <h1>Welcome back</h1>
+              <p>Login to continue shopping your favorites.</p>
+            </div>
 
-          <button class="submit" type="submit" disabled={isLoading}>
-            Submit
-          </button>
-          {error && <div className="error">{error}</div>}
-          {/* <p class="signin">
-            Don't have an acount ? <Link to="/signup">Signin</Link>
-          </p> */}
-        </form>
+            <form className="auth-form" onSubmit={handle_submit}>
+              <label className="auth-label">
+                Email
+                <input
+                  className="auth-input"
+                  type="email"
+                  placeholder="you@example.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </label>
+
+              <label className="auth-label">
+                Password
+                <input
+                  className="auth-input"
+                  type="password"
+                  placeholder="Your password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </label>
+
+              {error && <div className="auth-error">{error}</div>}
+
+              <button className="auth-submit" type="submit" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign in"}
+              </button>
+
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <Link to="/forgot-password" style={{ color: "#667085", fontWeight: 800, textDecoration: "none" }}>
+                  Forgot password?
+                </Link>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </React.Fragment>
   );

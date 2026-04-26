@@ -69,7 +69,8 @@
   transform: scale(1.05);
 }
 
-.fa-cart-shopping {
+.fa-cart-shopping,
+.fa-spa {
   font-size: 1.8rem;
 }
 

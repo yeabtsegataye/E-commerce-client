@@ -15,6 +15,9 @@ import { UseAuthContext } from "./hooks/useAuthContext";
 import Itemsdetails from "./pages/Itemsdetails";
 import Notfound from "./pages/404";
 import Cart from "./pages/Cart";
+import ContactFab from "./components/ContactFab";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   const { user } = UseAuthContext();
@@ -26,6 +29,8 @@ function App() {
       <Routes>
         <Route exact path="/" element={<Home />} />
         <Route path="/login" element={user ? <Home /> : <Login />} />
+        <Route path="/forgot-password" element={user ? <Home /> : <ForgotPassword />} />
+        <Route path="/reset-password" element={user ? <Home /> : <ResetPassword />} />
         {/* <Route path="/signup" element={user ? <Home /> : <Signup />} /> */}
         <Route path="/service" element={<Servic />} />
         <Route
@@ -43,6 +48,7 @@ function App() {
         <Route path="/categorydetail/:id" element={<Catdetails />} />
         <Route path="*" element={<Notfound />} />
       </Routes>
+      <ContactFab />
     </BrowserRouter>
   );
 }
