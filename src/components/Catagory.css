@@ -1,13 +1,16 @@
 /* ===== HOME CATEGORY WRAPPER ===== */
 .home-cat-section {
-  margin: 2rem 1rem;
+  margin: 2rem 0 1.5rem;
+  padding: 0 0.75rem;
 }
 
 /* ===== HEADER ===== */
 .home-cat-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-bottom: 1rem;
 }
 
@@ -33,12 +36,16 @@
 /* ===== HORIZONTAL LIST ===== */
 .home-cat-list {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   overflow-x: auto;
   padding: 0 1rem 10px;
   scroll-behavior: smooth;
-  justify-content: center; /* center items when possible */
+  justify-content: flex-start;
   align-items: center;
+  min-width: 100%;
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .home-cat-list::-webkit-scrollbar {
@@ -52,10 +59,13 @@
 
 /* ===== CATEGORY ITEM ===== */
 .home-cat-item {
+  flex: 0 0 auto;
   min-width: 120px;
+  width: auto;
   text-align: center;
   text-decoration: none;
   color: black;
+  padding: 0.15rem;
 }
 
 .home-cat-item img {

@@ -24,6 +24,7 @@ const Navbar = () => {
   const [Loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
   const Toast = useToast();
 
   // console.log("search", searchResult);
@@ -102,7 +103,16 @@ const Navbar = () => {
           MK_cosmo
         </a>
 
-        <div className="search">
+        <button
+          type="button"
+          className="mobile-search-toggle"
+          aria-label="Open search"
+          onClick={() => setMobileSearchVisible((value) => !value)}
+        >
+          <i className="fa-solid fa-magnifying-glass"></i>
+        </button>
+
+        <div className={`search ${mobileSearchVisible ? "open" : ""}`}>
           <form className="d-flex flex-grow-1" onSubmit={handleSearchSubmit}>
             <div className="search-container" style={{ position: "relative" }}>
               <input
@@ -110,7 +120,6 @@ const Navbar = () => {
                 type="search"
                 placeholder="Search items"
                 aria-label="Search"
-                style={{ width: "400px" }}
                 value={search}
                 onChange={(e) => handle_Search(e.target.value)}
                 onBlur={handleSearchBlur}

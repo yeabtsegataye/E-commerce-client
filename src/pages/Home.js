@@ -19,8 +19,8 @@ function Home() {
         <section className="home-hero">
           <div className="home-hero-inner">
             <div className="home-hero-copy">
-              <div className="home-hero-badge">Sale up to 40% off</div>
-              <h1 className="home-hero-title">MK Cosmo Natural Cosmetics</h1>
+              {/* <div className="home-hero-badge">Sale up to 40% off</div> */}
+              <h1 className="home-hero-title">Aloe Vera Natural Cosmetics</h1>
               <p className="home-hero-subtitle">
                 Discover skincare, makeup, and beauty essentials — curated for
                 everyday glow.
@@ -42,10 +42,10 @@ function Home() {
                   <i className="fa-solid fa-shield-heart" aria-hidden="true"></i>
                   <span>Original products</span>
                 </div>
-                <div className="home-hero-highlight">
+                {/* <div className="home-hero-highlight">
                   <i className="fa-solid fa-leaf" aria-hidden="true"></i>
                   <span>Skin-friendly picks</span>
-                </div>
+                </div> */}
               </div>
             </div>
 

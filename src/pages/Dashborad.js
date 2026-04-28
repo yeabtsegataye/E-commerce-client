@@ -1866,7 +1866,6 @@ function Dashboard() {
                     className="input"
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={(e) => setNewItemImage(e.target.files?.[0] || null)}
                     required
                   />
@@ -1977,6 +1976,9 @@ function Dashboard() {
                   onClick={() => handleToggleEnabled(it._id, !it.IsEnabled)}
                 >
                   {it.IsEnabled ? "Disable" : "Enable"}
+                </button>
+                <button className="edit-btn" type="button" onClick={() => navigate(`/itemdetail/${it._id}?edit=true`)}>
+                  Edit
                 </button>
                 <button className="add-new-btn" type="button" onClick={() => navigate(`/itemdetail/${it._id}`)}>
                   View

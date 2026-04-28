@@ -1,3 +1,19 @@
+:root {
+  font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #1f2937;
+  background-color: #fbfaf8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -5,11 +21,91 @@ body {
   flex-direction: column;
   min-height: 100vh;
   overflow-x: hidden;
+  font-family: inherit;
+  font-size: 1rem;
+  background: transparent;
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select,
+a {
+  font: inherit;
 }
 
 .content {
   flex: 1;
-  padding-bottom: 30px;
+  padding: 0 18px 40px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.home-hero {
+  padding: 44px 0 42px;
+  position: relative;
+}
+
+.home-hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 1.15fr);
+  gap: 28px;
+  align-items: center;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 18px;
+}
+
+.home-hero-copy {
+  max-width: 680px;
+}
+
+.home-hero-media {
+  min-height: auto;
+}
+
+.home-hero-media img,
+.home-hero-media video {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 960px) {
+  .home-hero {
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    width: 100vw;
+    padding: 30px 18px 32px;
+  }
+
+  .home-hero-inner {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .home-hero-media {
+    width: 100%;
+    max-width: 100%;
+    min-height: auto;
+  }
+
+  .home-hero-media img,
+  .home-hero-media video {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .home-hero-copy {
+    padding-bottom: 20px;
+  }
+
+  .home-hero-title {
+    font-size: 2rem;
+  }
 }
 
 /* =========================
@@ -24,7 +120,7 @@ body {
   max-width: 1180px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.05fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
   align-items: center;
 }
@@ -135,7 +231,8 @@ body {
 }
 
 .home-hero-carousel .carousel-inner img {
-  height: 420px;
+  width: 100%;
+  height: auto;
   object-fit: cover;
 }
 
@@ -149,7 +246,7 @@ body {
   }
 
   .home-hero-carousel .carousel-inner img {
-    height: 320px;
+    height: auto;
   }
 }
 
@@ -277,6 +374,7 @@ body {
   height: 420px;
   object-fit: cover;
   display: block;
+  cursor: zoom-in;
 }
 
 .item-detail-body {
@@ -450,6 +548,98 @@ body {
 .btn-secondary:hover {
   background: #f8f9fa;
 }
+
+.item-edit-form {
+  border: 1px solid #e2e8f0;
+  padding: 18px;
+  border-radius: 16px;
+  margin-bottom: 18px;
+  background: #ffffff;
+}
+
+.item-edit-form .form-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.item-edit-form .form-group {
+  flex: 1;
+  min-width: 220px;
+}
+
+.item-edit-form .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.item-edit-form .input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.item-edit-form textarea.input {
+  resize: vertical;
+}
+
+.item-edit-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.image-preview-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 9999;
+}
+
+.image-preview-content {
+  position: relative;
+  max-width: 95vw;
+  max-height: 95vh;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.image-preview-content img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.close-preview-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 800;
+  cursor: pointer;
+  color: #1f2d3d;
+}
+
+.close-preview-btn:hover {
+  transform: scale(1.05);
+}
+
 .item_poster_coll .price {
   margin-bottom: 1rem;
   padding: 0.8rem;

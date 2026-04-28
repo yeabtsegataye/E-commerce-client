@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import "./styles.css";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Avatar, Wrap, WrapItem } from "@chakra-ui/react";
 import { UseAuthContext } from "../hooks/useAuthContext";
 import { useCart } from "../contexts/CartContext";
@@ -11,11 +11,25 @@ function Itemsdetails() {
   const { user } = UseAuthContext();
   const API_BASE_URL = process.env.REACT_APP_URL;
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
   const [items, setItems] = useState(null);
   const [loadError, setLoadError] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFields, setEditFields] = useState({
+    Item_Name: "",
+    Item_Brand: "",
+    Item_Description: "",
+    Item_Price: "",
+    Item_Status: "",
+    Item_Age: "",
+    Item_Gender: "unisex",
+    Item_Category: "",
+  });
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,8 +61,40 @@ function Itemsdetails() {
     };
   }, [API_BASE_URL, id, user?.token]);
 
-  const isOwner =
-    user && items && user.id === items.Item_poster?._id;
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/ip/cat/allcat`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setCategories(data.cats || data);
+      } catch {
+        // ignore category load failures for view-only mode
+      }
+    };
+    fetchCategories();
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    if (!items) return;
+    setEditFields({
+      Item_Name: items.Item_Name || "",
+      Item_Brand: items.Item_Brand || "",
+      Item_Description: items.Item_Description || "",
+      Item_Price: items.Item_SellingPrice ?? items.Item_Price ?? "",
+      Item_Status: items.Item_Status || "available",
+      Item_Age: items.Item_Age ?? "",
+      Item_Gender: items.Item_Gender || "unisex",
+      Item_Category: items.Item_Category?._id || "",
+    });
+  }, [items]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("edit") === "true") {
+      setIsEditing(true);
+    }
+  }, [location.search]);
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
@@ -81,6 +127,9 @@ function Itemsdetails() {
 
   const displayPrice = items?.Item_SellingPrice ?? items?.Item_Price ?? 0;
 
+  const isOwner = user && items && user.id === items.Item_poster?._id;
+  const canEdit = user && items && (user.isAdmin || isOwner);
+
   const stockQty = typeof items?.StockQty === "number" ? items.StockQty : null;
   const inStock = stockQty === null ? null : stockQty > 0;
 
@@ -92,6 +141,54 @@ function Itemsdetails() {
     }
     addToCart(items);
     navigate("/cart");
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!items || !user?.id) return;
+
+    try {
+      const payload = {
+        Item_id: items._id,
+        user_id: user.id,
+        Item_Name: editFields.Item_Name,
+        Item_Brand: editFields.Item_Brand,
+        Item_Description: editFields.Item_Description,
+        Item_Price: editFields.Item_Price,
+        Item_Status: editFields.Item_Status,
+        Item_Age: editFields.Item_Age,
+        Item_Gender: editFields.Item_Gender,
+      };
+
+      if (editFields.Item_Category) {
+        payload.Item_Category = editFields.Item_Category;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/ip/item/itemsedit`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Update failed");
+      }
+      setItems(data.item);
+      setIsEditing(false);
+      alert("Item updated successfully.");
+    } catch (err) {
+      alert(err.message || "Failed to update item");
+    }
+  };
+
+  const handleImageClick = () => {
+    setIsPreviewOpen(true);
+  };
+
+  const closePreview = () => {
+    setIsPreviewOpen(false);
   };
 
   const ageNum = items != null ? Number(items.Item_Age) : NaN;
@@ -114,7 +211,12 @@ function Itemsdetails() {
             ) : items ? (
               <div className="item-detail-card">
                 <div className="item-detail-media">
-                  <img src={items.Item_Images} alt={items.Item_Name} />
+                  <img
+                    src={items.Item_Images}
+                    alt={items.Item_Name}
+                    onClick={handleImageClick}
+                    title="Click to enlarge"
+                  />
                 </div>
 
                 <div className="item-detail-body">
@@ -124,6 +226,28 @@ function Itemsdetails() {
                       ETB {Number(displayPrice).toLocaleString()}
                     </div>
                   </div>
+
+                  {canEdit && (
+                    <div className="item-detail-actions" style={{ marginBottom: 16 }}>
+                      {!isEditing ? (
+                        <button
+                          className="btn-secondary"
+                          type="button"
+                          onClick={() => setIsEditing(true)}
+                        >
+                          Edit item
+                        </button>
+                      ) : (
+                        <button
+                          className="btn-secondary"
+                          type="button"
+                          onClick={() => setIsEditing(false)}
+                        >
+                          Cancel edit
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                   <div className="item-detail-meta">
                     <span className="item-pill">Brand: {items.Item_Brand}</span>
@@ -152,6 +276,144 @@ function Itemsdetails() {
                       <span className="item-pill">Stock qty: {stockQty}</span>
                     )}
                   </div>
+
+                  {isEditing && (
+                    <form className="item-edit-form" onSubmit={handleEditSubmit}>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Name</label>
+                          <input
+                            className="input"
+                            value={editFields.Item_Name}
+                            onChange={(e) =>
+                              setEditFields((prev) => ({
+                                ...prev,
+                                Item_Name: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Brand</label>
+                          <input
+                            className="input"
+                            value={editFields.Item_Brand}
+                            onChange={(e) =>
+                              setEditFields((prev) => ({
+                                ...prev,
+                                Item_Brand: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-group" style={{ flex: 1 }}>
+                          <label>Description</label>
+                          <textarea
+                            className="input"
+                            rows={4}
+                            value={editFields.Item_Description}
+                            onChange={(e) =>
+                              setEditFields((prev) => ({
+                                ...prev,
+                                Item_Description: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Price</label>
+                          <input
+                            className="input"
+                            type="number"
+                            value={editFields.Item_Price}
+                            onChange={(e) =>
+                              setEditFields((prev) => ({
+                                ...prev,
+                                Item_Price: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Status</label>
+                          <input
+                            className="input"
+                            value={editFields.Item_Status}
+                            onChange={(e) =>
+                              setEditFields((prev) => ({
+                                ...prev,
+                                Item_Status: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Age</label>
+                          <input
+                            className="input"
+                            type="number"
+                            value={editFields.Item_Age}
+                            onChange={(e) =>
+                              setEditFields((prev) => ({
+                                ...prev,
+                                Item_Age: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Gender</label>
+                          <select
+                            className="input"
+                            value={editFields.Item_Gender}
+                            onChange={(e) =>
+                              setEditFields((prev) => ({
+                                ...prev,
+                                Item_Gender: e.target.value,
+                              }))
+                            }
+                          >
+                            <option value="unisex">Unisex</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-group" style={{ flex: 1 }}>
+                          <label>Category</label>
+                          <select
+                            className="input"
+                            value={editFields.Item_Category}
+                            onChange={(e) =>
+                              setEditFields((prev) => ({
+                                ...prev,
+                                Item_Category: e.target.value,
+                              }))
+                            }
+                          >
+                            <option value="">Keep current category</option>
+                            {categories.map((category) => (
+                              <option key={category._id} value={category._id}>
+                                {category.catagory_Name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="item-edit-form-actions">
+                        <button className="btn-primary" type="submit">
+                          Save changes
+                        </button>
+                      </div>
+                    </form>
+                  )}
 
                   <p className="item-detail-description">{items.Item_Description}</p>
 
@@ -239,6 +501,16 @@ function Itemsdetails() {
                     <button className="delete-item-btn" type="button" onClick={handleDelete}>
                       Delete item
                     </button>
+                  </div>
+                )}
+                {isPreviewOpen && (
+                  <div className="image-preview-modal" onClick={closePreview}>
+                    <div className="image-preview-content" onClick={(e) => e.stopPropagation()}>
+                      <button className="close-preview-btn" type="button" onClick={closePreview}>
+                        ×
+                      </button>
+                      <img src={items.Item_Images} alt={items.Item_Name} />
+                    </div>
                   </div>
                 )}
 

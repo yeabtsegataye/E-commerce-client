@@ -82,13 +82,21 @@
   position: relative;
 }
 
+.mobile-search-toggle {
+  display: none;
+}
+
+.search.open {
+  display: block !important;
+}
+
 .search form {
   width: 100%;
 }
 
 .search-container {
   position: relative;
-  width: 400px;
+  width: 100%;
 }
 
 .search .form-control {
@@ -553,14 +561,59 @@
 @media (max-width: 768px) {
   .navbar {
     padding: 0.6rem 0.8rem;
+    position: relative;
   }
   
   .search {
     display: none !important;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: var(--white);
+    padding: 0.85rem 0.9rem 1rem;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+    z-index: 1001;
   }
   
-  .bar {
+  .search.open {
     display: block !important;
+  }
+  
+  .search-container {
+    width: 100%;
+  }
+  
+  .search .form-control {
+    width: 100%;
+  }
+  
+  .mobile-search-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--white);
+    font-size: 1.3rem;
+    padding: 0.4rem;
+    cursor: pointer;
+    margin-left: 0.5rem;
+  }
+  
+  .mobile-search-toggle:hover {
+    color: #ffe5e5;
+  }
+  
+  .search-button {
+    right: 12px;
+  }
+  
+  .snav {
+    display: flex !important;
+    padding: 0.5rem 0.6rem;
+    overflow-x: auto;
   }
   
   /* Keep SNAV visible on mobile */
