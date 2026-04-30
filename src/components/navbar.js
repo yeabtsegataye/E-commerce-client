@@ -100,7 +100,7 @@ const Navbar = () => {
       <nav className="navbar">
         <a className="navbar-brand me-auto" href="/">
           <i className="fa-solid fa-spa"></i>
-          MK_cosmo
+          KM_cosmo
         </a>
 
         <button
